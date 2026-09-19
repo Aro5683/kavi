@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-100 text-slate-800">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Smart Attendance WebApp</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        /* Fixed 7-column calendar layout with adaptive touch dimensions */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+        }
+
+        /* Responsive minimum touch-target guarantees for mobile screens */
+        .day-card {
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease, border-color 0.15s ease;
+            min-height: 52px;
+        }
+
+        @media (min-width: 640px) {
+            .day-card {
+                min-height: 68px;
+            }
+        }
+
+        .day-card:active {
+            transform: scale(0.92);
+        }
+
+        /* Smooth Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-slate-100 text-slate-800 antialiased selection:bg-emerald-500 selection:text-white pb-safe">
+
+    <!-- Name Input Modal (Onboarding) -->
+    <div id="nameModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-300 hidden">
+        <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 max-w-sm sm:max-w-md w-full shadow-2xl text-center relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-10 -left-10 w-28 h-28 bg-teal-500/10 rounded-full blur-2xl"></div>
+            
+            <div class="w-16 h-16 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl mx-auto mb-4 shadow-sm">
+                <i class="fa-solid fa-user-astronaut"></i>
+            </div>
+            
+            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 mb-1.5">Welcome Aboard! 👋</h2>
+            <p class="text-slate-500 text-xs sm:text-sm mb-6">Enter your name to start tracking your daily attendance.</p>
+            
+            <form id="nameForm" onsubmit="handleNameSubmit(event)" class="space-y-4">
+                <div>
+                    <input type="text" id="usernameInput" required placeholder="e.g. Alex Morgan" 
+                        class="w-full bg-slate-50 border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-slate-900 placeholder-slate-400 rounded-2xl px-4 py-3.5 text-center font-semibold text-base outline-none transition">
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold py-3.5 px-6 rounded-2xl shadow-lg shadow-emerald-600/20 transition duration-200 flex items-center justify-center gap-2 text-sm sm:text-base">
+                    <span>Continue to Dashboard</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Name Modal -->
+    <div id="editNameModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-300 hidden">
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-xs sm:max-w-md w-full shadow-2xl text-center">
+            <h3 class="text-lg sm:text-xl font-bold text-slate-900 mb-4">Update Display Name</h3>
+            <input type="text" id="editUsernameInput" class="w-full bg-slate-50 border border-slate-300 focus:border-emerald-500 text-slate-900 rounded-2xl px-4 py-3 text-center font-semibold outline-none mb-5 text-sm sm:text-base">
+            <div class="flex gap-2.5">
+                <button onclick="closeEditNameModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-semibold py-3 rounded-xl text-xs sm:text-sm transition">Cancel</button>
+                <button onclick="saveUpdatedName()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold py-3 rounded-xl shadow-md shadow-emerald-600/20 text-xs sm:text-sm transition">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-3.5 sm:px-6 py-3 flex items-center justify-between gap-2">
+            <!-- User Profile Greeting -->
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-md shadow-emerald-500/20 flex-shrink-0">
+                    <span id="userAvatar">U</span>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                        <span id="userGreeting" class="text-sm sm:text-base font-extrabold text-slate-900 truncate max-w-[130px] xs:max-w-[180px] sm:max-w-xs">Hey, User</span>
+                        <button onclick="openEditNameModal()" title="Edit Name" class="text-slate-400 hover:text-emerald-600 active:scale-90 text-xs transition p-1 rounded-md">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                    </div>
+                    <p class="text-[11px] sm:text-xs text-slate-500 truncate hidden xs:block">Smart Daily Attendance Tracker</p>
+                </div>
+            </div>
+
+            <!-- Right Controls: Storage Badge & Clock -->
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <!-- OPFS Storage Indicator -->
+                <div id="storageBadge" class="hidden md:flex items-center gap-1.5 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-full text-[11px] font-medium text-slate-600" title="Data Persistence Engine">
+                    <span id="storageIcon" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="storageText">OPFS Sync</span>
+                </div>
+
+                <!-- Clock / Date Pill -->
+                <div id="currentDateDisplay" class="bg-slate-50 border border-slate-200/90 text-slate-700 text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-200">
+                    <i class="fa-regular fa-calendar-days text-emerald-600 text-xs"></i>
+                    <span id="clockText" class="text-[11px] sm:text-xs">--</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Canvas -->
+    <main class="max-w-5xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 flex-grow space-y-4 sm:space-y-6">
+        
+        <!-- Main Calendar Card -->
+        <section class="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-sm">
+            
+            <!-- Calendar Navigation Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-slate-100">
+                
+                <!-- Month & Year Selectors with Step Buttons -->
+                <div class="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-3 w-full sm:w-auto">
+                    <button id="prevMonthBtn" onclick="navigateMonth(-1)" class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/90 text-slate-700 flex items-center justify-center transition active:scale-95 flex-shrink-0" title="Previous Month">
+                        <i class="fa-solid fa-chevron-left text-xs sm:text-sm"></i>
+                    </button>
+
+                    <div class="flex items-center gap-1.5 flex-grow justify-center sm:flex-grow-0">
+                        <!-- Month Select -->
+                        <select id="monthSelect" onchange="onDateSelectorChange()" class="bg-slate-50 border border-slate-200/90 text-slate-900 text-sm sm:text-base font-extrabold rounded-xl px-2.5 py-2 sm:px-3 sm:py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
+                            <option value="0">January</option>
+                            <option value="1">February</option>
+                            <option value="2">March</option>
+                            <option value="3">April</option>
+                            <option value="4">May</option>
+                            <option value="5">June</option>
+                            <option value="6">July</option>
+                            <option value="7">August</option>
+                            <option value="8">September</option>
+                            <option value="9">October</option>
+                            <option value="10">November</option>
+                            <option value="11">December</option>
+                        </select>
+
+                        <!-- Year Select -->
+                        <select id="yearSelect" onchange="onDateSelectorChange()" class="bg-slate-50 border border-slate-200/90 text-slate-900 text-sm sm:text-base font-extrabold rounded-xl px-2.5 py-2 sm:px-3 sm:py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+
+                    <button id="nextMonthBtn" onclick="navigateMonth(1)" class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/90 text-slate-700 flex items-center justify-center transition active:scale-95 flex-shrink-0" title="Next Month">
+                        <i class="fa-solid fa-chevron-right text-xs sm:text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Quick Action Buttons -->
+                <div class="flex items-center justify-end gap-2 w-full sm:w-auto pt-1 sm:pt-0">
+                    <button onclick="jumpToToday()" class="flex-1 sm:flex-none bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/90 text-xs font-bold px-3.5 py-2.5 rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-bullseye text-xs"></i>
+                        <span>Jump to Today</span>
+                    </button>
+
+                    <button onclick="clearMonthData()" class="bg-slate-50 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200/90 text-slate-500 border border-slate-200/90 text-xs font-bold px-3 py-2.5 rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5" title="Reset current month state">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span class="sm:hidden">Reset</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Days of Week Banner -->
+            <div class="calendar-grid gap-1 sm:gap-2 text-center mb-2">
+                <div class="text-[10px] sm:text-xs font-extrabold text-rose-500 py-1 uppercase tracking-wider">Sun</div>
+                <div class="text-[10px] sm:text-xs font-extrabold text-slate-400 py-1 uppercase tracking-wider">Mon</div>
+                <div class="text-[10px] sm:text-xs font-extrabold text-slate-400 py-1 uppercase tracking-wider">Tue</div>
+                <div class="text-[10px] sm:text-xs font-extrabold text-slate-400 py-1 uppercase tracking-wider">Wed</div>
+                <div class="text-[10px] sm:text-xs font-extrabold text-slate-400 py-1 uppercase tracking-wider">Thu</div>
+                <div class="text-[10px] sm:text-xs font-extrabold text-slate-400 py-1 uppercase tracking-wider">Fri</div>
+                <div class="text-[10px] sm:text-xs font-extrabold text-emerald-600 py-1 uppercase tracking-wider">Sat</div>
+            </div>
+
+            <!-- Dynamic Calendar Dates Grid -->
+            <div id="calendarGrid" class="calendar-grid gap-1 sm:gap-2">
+                <!-- Date Cells generated via JavaScript -->
+            </div>
+
+            <!-- Mobile Touch Guide / Legend -->
+            <div class="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-[11px] sm:text-xs text-slate-500">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3.5 h-3.5 rounded bg-emerald-500 border border-emerald-600 flex items-center justify-center text-[9px] text-white"><i class="fa-solid fa-check"></i></span>
+                        <span class="font-semibold text-slate-700">Present (Click date)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3.5 h-3.5 rounded bg-slate-50 border border-slate-200"></span>
+                        <span class="font-semibold text-slate-700">Unmarked (Click again to reset)</span>
+                    </div>
+                </div>
+
+                <div class="text-slate-400 text-[11px]">
+                    <i class="fa-solid fa-hand-pointer mr-1 text-emerald-600"></i> Tap any date to toggle attendance status
+                </div>
+            </div>
+        </section>
+
+        <!-- Clean Attendance Summary Cards -->
+        <section class="grid grid-cols-2 gap-3 sm:gap-4">
+            <!-- Current Month Present Card -->
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
+                <div>
+                    <span class="text-[10px] sm:text-xs font-extrabold text-slate-400 uppercase tracking-wider block mb-0.5 sm:mb-1">This Month Present</span>
+                    <div class="flex items-baseline gap-1.5">
+                        <h3 id="statMonthPresent" class="text-2xl sm:text-3xl font-black text-slate-900">0</h3>
+                        <span id="statMonthTotal" class="text-[11px] sm:text-xs font-semibold text-slate-500">/ 0 days</span>
+                    </div>
+                </div>
+                <div class="w-9 h-9 sm:w-12 sm:h-12 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-xl sm:rounded-2xl flex items-center justify-center text-lg sm:text-xl shadow-sm self-end sm:self-auto">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+            </div>
+
+            <!-- Overall Present Card -->
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
+                <div>
+                    <span class="text-[10px] sm:text-xs font-extrabold text-slate-400 uppercase tracking-wider block mb-0.5 sm:mb-1">Overall Days Present</span>
+                    <div class="flex items-baseline gap-1.5">
+                        <h3 id="statOverallPresent" class="text-2xl sm:text-3xl font-black text-slate-900">0</h3>
+                        <span class="text-[11px] sm:text-xs font-semibold text-slate-500">all-time total</span>
+                    </div>
+                </div>
+                <div class="w-9 h-9 sm:w-12 sm:h-12 bg-blue-50 border border-blue-100 text-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center text-lg sm:text-xl shadow-sm self-end sm:self-auto">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 bg-slate-900/95 text-white px-4 py-2.5 sm:py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 transition-all duration-300 transform translate-y-16 opacity-0 pointer-events-none z-50 text-xs sm:text-sm font-semibold max-w-[90vw] whitespace-nowrap">
+        <div id="toastIcon" class="text-emerald-400 text-base"><i class="fa-solid fa-circle-check"></i></div>
+        <span id="toastMsg" class="truncate">Notification message</span>
+    </div>
+
+    <!-- App Footer -->
+    <footer class="bg-white border-t border-slate-200/80 py-3.5 text-center text-[11px] text-slate-500 mt-2">
+        <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-1">
+            <p>Smart Attendance WebApp &bull; Mobile-First & OPFS Storage</p>
+            <p id="storageEngineDetail" class="text-slate-400">Storage Engine: Initializing...</p>
+        </div>
+    </footer>
+
+    <script>
+        /**
+         * Core Application State
+         */
+        let state = {
+            user: {
+                name: ''
+            },
+            // Date string keys "YYYY-MM-DD": true (Present)
+            attendance: {}, 
+            currentViewYear: new Date().getFullYear(),
+            currentViewMonth: new Date().getMonth(),
+            storageType: 'none' // 'opfs' | 'localstorage'
+        };
+
+        const monthNames = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        const FILE_NAME = "attendance_data_v2.json";
+
+        // DOM Element Cache
+        const nameModal = document.getElementById('nameModal');
+        const editNameModal = document.getElementById('editNameModal');
+        const usernameInput = document.getElementById('usernameInput');
+        const editUsernameInput = document.getElementById('editUsernameInput');
+        const userGreeting = document.getElementById('userGreeting');
+        const userAvatar = document.getElementById('userAvatar');
+        
+        const monthSelect = document.getElementById('monthSelect');
+        const yearSelect = document.getElementById('yearSelect');
+        const calendarGrid = document.getElementById('calendarGrid');
+        
+        const statMonthPresent = document.getElementById('statMonthPresent');
+        const statMonthTotal = document.getElementById('statMonthTotal');
+        const statOverallPresent = document.getElementById('statOverallPresent');
+        
+        const storageBadge = document.getElementById('storageBadge');
+        const storageIcon = document.getElementById('storageIcon');
+        const storageText = document.getElementById('storageText');
+        const storageEngineDetail = document.getElementById('storageEngineDetail');
+        const clockText = document.getElementById('clockText');
+
+        /**
+         * Storage Engine: OPFS with LocalStorage Fallback
+         */
+        async function initStorageAndLoadData() {
+            let loaded = false;
+
+            // Try OPFS First
+            if (navigator.storage && navigator.storage.getDirectory) {
+                try {
+                    const root = await navigator.storage.getDirectory();
+                    const fileHandle = await root.getFileHandle(FILE_NAME, { create: true });
+                    const file = await fileHandle.getFile();
+                    const text = await file.text();
+
+                    if (text && text.trim() !== "") {
+                        const parsed = JSON.parse(text);
+                        if (parsed.user) state.user = parsed.user;
+                        if (parsed.attendance) state.attendance = parsed.attendance;
+                    }
+
+                    state.storageType = 'opfs';
+                    setStorageBadge('OPFS Sync', 'bg-emerald-500', 'Origin Private File System active');
+                    loaded = true;
+                } catch (err) {
+                    console.warn("OPFS error, falling back to LocalStorage:", err);
+                }
+            }
+
+            // LocalStorage Fallback
+            if (!loaded) {
+                try {
+                    const localData = localStorage.getItem('attendance_app_light_data');
+                    if (localData) {
+                        const parsed = JSON.parse(localData);
+                        if (parsed.user) state.user = parsed.user;
+                        if (parsed.attendance) state.attendance = parsed.attendance;
+                    }
+                    state.storageType = 'localstorage';
+                    setStorageBadge('LocalStorage', 'bg-amber-500', 'Saved locally in browser storage');
+                } catch (e) {
+                    console.error("Storage initialization error:", e);
+                    state.storageType = 'none';
+                    setStorageBadge('Memory Only', 'bg-rose-500', 'Data will reset on page refresh');
+                }
+            }
+
+            // Onboarding Check
+            if (!state.user.name || state.user.name.trim() === '') {
+                showNameModal();
+            } else {
+                updateUserUI();
+            }
+
+            initYearSelect();
+            updateDateSelectors();
+            renderCalendar();
+        }
+
+        async function saveData() {
+            const dataToSave = JSON.stringify({
+                user: state.user,
+                attendance: state.attendance,
+                lastSaved: new Date().toISOString()
+            });
+
+            if (state.storageType === 'opfs') {
+                try {
+                    const root = await navigator.storage.getDirectory();
+                    const fileHandle = await root.getFileHandle(FILE_NAME, { create: true });
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(dataToSave);
+                    await writable.close();
+                } catch (err) {
+                    console.error("OPFS Save Failed, using LocalStorage fallback:", err);
+                    localStorage.setItem('attendance_app_light_data', dataToSave);
+                }
+            } else {
+                localStorage.setItem('attendance_app_light_data', dataToSave);
+            }
+
+            updateMetrics();
+        }
+
+        function setStorageBadge(label, dotClass, detailText) {
+            storageBadge.classList.remove('hidden');
+            storageText.innerText = label;
+            storageIcon.className = `w-2 h-2 rounded-full ${dotClass} animate-pulse`;
+            storageEngineDetail.innerText = `Storage Engine: ${detailText}`;
+        }
+
+        /**
+         * User Name & Profile Management
+         */
+        function showNameModal() {
+            nameModal.classList.remove('hidden');
+            setTimeout(() => usernameInput.focus(), 150);
+        }
+
+        function handleNameSubmit(event) {
+            event.preventDefault();
+            const val = usernameInput.value.trim();
+            if (val) {
+                state.user.name = val;
+                saveData();
+                updateUserUI();
+                nameModal.classList.add('hidden');
+                showToast(`Welcome, ${val}!`, 'success');
+            }
+        }
+
+        function openEditNameModal() {
+            editUsernameInput.value = state.user.name;
+            editNameModal.classList.remove('hidden');
+            setTimeout(() => editUsernameInput.focus(), 150);
+        }
+
+        function closeEditNameModal() {
+            editNameModal.classList.add('hidden');
+        }
+
+        function saveUpdatedName() {
+            const val = editUsernameInput.value.trim();
+            if (val) {
+                state.user.name = val;
+                saveData();
+                updateUserUI();
+                closeEditNameModal();
+                showToast('Name updated successfully!', 'success');
+            }
+        }
+
+        function updateUserUI() {
+            if (state.user.name) {
+                userGreeting.innerText = `Hey, ${state.user.name}`;
+                userAvatar.innerText = state.user.name.charAt(0).toUpperCase();
+            }
+        }
+
+        /**
+         * Calendar Navigation
+         */
+        function initYearSelect() {
+            yearSelect.innerHTML = '';
+            const currentYear = new Date().getFullYear();
+            for (let y = currentYear - 5; y <= currentYear + 5; y++) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.innerText = y;
+                yearSelect.appendChild(opt);
+            }
+        }
+
+        function updateDateSelectors() {
+            monthSelect.value = state.currentViewMonth;
+            yearSelect.value = state.currentViewYear;
+        }
+
+        function onDateSelectorChange() {
+            state.currentViewMonth = parseInt(monthSelect.value, 10);
+            state.currentViewYear = parseInt(yearSelect.value, 10);
+            renderCalendar();
+        }
+
+        function navigateMonth(delta) {
+            state.currentViewMonth += delta;
+            if (state.currentViewMonth > 11) {
+                state.currentViewMonth = 0;
+                state.currentViewYear++;
+            } else if (state.currentViewMonth < 0) {
+                state.currentViewMonth = 11;
+                state.currentViewYear--;
+            }
+            updateDateSelectors();
+            renderCalendar();
+        }
+
+        function jumpToToday() {
+            const now = new Date();
+            state.currentViewYear = now.getFullYear();
+            state.currentViewMonth = now.getMonth();
+            updateDateSelectors();
+            renderCalendar();
+            showToast('Jumped to current month', 'info');
+        }
+
+        /**
+         * Render Calendar Grid Cells
+         */
+        function renderCalendar() {
+            calendarGrid.innerHTML = '';
+
+            const year = state.currentViewYear;
+            const month = state.currentViewMonth;
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+
+            const today = new Date();
+            const isCurrentMonthView = (today.getFullYear() === year && today.getMonth() === month);
+            const todayDateNum = today.getDate();
+
+            // Render Blank Cells before month start
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-card rounded-xl sm:rounded-2xl bg-slate-50/50 border border-slate-100 pointer-events-none opacity-40';
+                calendarGrid.appendChild(emptyCell);
+            }
+
+            // Render Month Days
+            for (let day = 1; day <= totalDaysInMonth; day++) {
+                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isPresent = !!state.attendance[dateKey];
+                const isToday = isCurrentMonthView && (day === todayDateNum);
+
+                const card = document.createElement('div');
+                
+                let classes = 'day-card rounded-xl sm:rounded-2xl p-1.5 sm:p-2 flex flex-col justify-between items-center cursor-pointer select-none relative font-medium border ';
+
+                if (isPresent) {
+                    classes += 'bg-emerald-500 border-emerald-600 text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-600';
+                } else {
+                    classes += 'bg-slate-50 border-slate-200/90 text-slate-700 hover:bg-slate-100 hover:border-slate-300';
+                }
+
+                if (isToday) {
+                    classes += ' ring-2 ring-emerald-500 ring-offset-1 ring-offset-white font-black';
+                }
+
+                card.className = classes;
+
+                let iconHTML = isPresent 
+                    ? `<span class="text-[10px] sm:text-xs bg-white/20 px-1 sm:px-1.5 py-0.5 rounded-md"><i class="fa-solid fa-check"></i></span>`
+                    : `<span class="text-[9px] sm:text-[10px] text-slate-300 font-normal">--</span>`;
+
+                let todayBadge = isToday 
+                    ? `<span class="absolute -top-1 -right-1 ${isPresent ? 'bg-slate-900 text-white' : 'bg-emerald-600 text-white'} text-[8px] sm:text-[9px] px-1 sm:px-1.5 py-0.5 rounded-full font-black shadow-sm">TODAY</span>` 
+                    : '';
+
+                card.innerHTML = `
+                    ${todayBadge}
+                    <span class="text-xs sm:text-sm ${isToday && !isPresent ? 'text-emerald-600 font-black' : ''}">${day}</span>
+                    <div class="mt-0.5 sm:mt-0">${iconHTML}</div>
+                `;
+
+                // Toggle logic: Click to mark present (green), click again to reset/unmark
+                card.addEventListener('click', () => {
+                    toggleAttendance(dateKey, day);
+                });
+
+                calendarGrid.appendChild(card);
+            }
+
+            updateMetrics();
+        }
+
+        /**
+         * Toggle Attendance State (Unmarked <-> Present)
+         */
+        function toggleAttendance(dateKey, dayNumber) {
+            if (state.attendance[dateKey]) {
+                delete state.attendance[dateKey];
+                showToast(`Day ${dayNumber}: Reset to Unmarked`, 'info');
+            } else {
+                state.attendance[dateKey] = true;
+                showToast(`Day ${dayNumber}: Marked Present`, 'present');
+            }
+
+            saveData();
+            renderCalendar();
+        }
+
+        function clearMonthData() {
+            const year = state.currentViewYear;
+            const monthStr = String(state.currentViewMonth + 1).padStart(2, '0');
+            const prefix = `${year}-${monthStr}`;
+
+            let count = 0;
+            for (let key in state.attendance) {
+                if (key.startsWith(prefix)) {
+                    delete state.attendance[key];
+                    count++;
+                }
+            }
+
+            if (count > 0) {
+                saveData();
+                renderCalendar();
+                showToast(`Cleared ${count} entries for this month`, 'info');
+            } else {
+                showToast('No entries to clear for this month', 'info');
+            }
+        }
+
+        /**
+         * Attendance Summary Statistics (Counts Only)
+         */
+        function updateMetrics() {
+            const year = state.currentViewYear;
+            const month = state.currentViewMonth;
+            const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+            const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+
+            let monthPresent = 0;
+            let overallPresent = 0;
+
+            for (let key in state.attendance) {
+                if (state.attendance[key]) {
+                    overallPresent++;
+                    if (key.startsWith(monthPrefix)) {
+                        monthPresent++;
+                    }
+                }
+            }
+
+            statMonthPresent.innerText = monthPresent;
+            statMonthTotal.innerText = `/ ${totalDaysInMonth} days`;
+            statOverallPresent.innerText = overallPresent;
+        }
+
+        /**
+         * Toast Helper
+         */
+        let toastTimeout;
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.innerText = message;
+
+            if (type === 'present') {
+                toastIcon.className = 'text-emerald-400 text-base';
+                toastIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            } else if (type === 'success') {
+                toastIcon.className = 'text-emerald-400 text-base';
+                toastIcon.innerHTML = '<i class="fa-solid fa-sparkles"></i>';
+            } else {
+                toastIcon.className = 'text-slate-400 text-base';
+                toastIcon.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+            }
+
+            toast.classList.remove('translate-y-16', 'opacity-0', 'pointer-events-none');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-16', 'opacity-0', 'pointer-events-none');
+            }, 2200);
+        }
+
+        /**
+         * Live Date Display
+         */
+        function startLiveClock() {
+            function update() {
+                const now = new Date();
+                clockText.innerText = now.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            }
+            update();
+            setInterval(update, 10000);
+        }
+
+        // Initialize App
+        window.onload = function() {
+            startLiveClock();
+            initStorageAndLoadData();
+        };
+    </script>
+</body>
+</html>
