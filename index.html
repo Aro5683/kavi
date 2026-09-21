@@ -1,620 +1,396 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-100 text-slate-800">
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Smart Attendance WebApp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Slow Ludo Chatbot Attendance</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- FontAwesome for Icons -->
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
         
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, minmax(0, 1fr));
+        @keyframes bounce-pawn {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-4px) scale(1.1); }
         }
+        .pawn-anim { animation: bounce-pawn 1.8s infinite ease-in-out; }
 
-        .day-card {
-            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease, border-color 0.15s ease;
-            min-height: 52px;
+        /* Chatbot Bubble Animation */
+        @keyframes pop-in {
+            0% { transform: scale(0.8) translateY(10px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
         }
-
-        @media (min-width: 640px) {
-            .day-card {
-                min-height: 68px;
-            }
-        }
-
-        .day-card:active {
-            transform: scale(0.92);
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 9999px;
-        }
+        .chat-pop { animation: pop-in 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between bg-slate-100 text-slate-800 antialiased selection:bg-emerald-500 selection:text-white pb-safe">
+<body class="min-h-screen flex flex-col justify-between bg-slate-950 text-slate-100 antialiased selection:bg-rose-500 selection:text-white pb-24">
 
-    <!-- Name Input Modal (Onboarding) -->
-    <div id="nameModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-300 hidden">
-        <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 max-w-sm sm:max-w-md w-full shadow-2xl text-center relative overflow-hidden">
-            <div class="absolute -top-10 -right-10 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl"></div>
-            <div class="absolute -bottom-10 -left-10 w-28 h-28 bg-teal-500/10 rounded-full blur-2xl"></div>
-            
-            <div class="w-16 h-16 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl mx-auto mb-4 shadow-sm">
-                <i class="fa-solid fa-user-astronaut"></i>
+    <!-- Onboarding / Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl relative">
+            <div class="w-16 h-16 bg-rose-500/10 border border-rose-500/30 text-rose-500 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3">
+                <i class="fa-solid fa-chess-pawn"></i>
             </div>
+            <h2 class="text-xl font-black mb-1">Customize Your Pawn 🎲</h2>
+            <p class="text-slate-400 text-xs mb-5">Set your player name and pick your Ludo pointer color!</p>
             
-            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 mb-1.5">Welcome! 👋</h2>
-            <p class="text-slate-500 text-xs sm:text-sm mb-6">Enter your name to start tracking your daily attendance.</p>
-            
-            <form id="nameForm" onsubmit="handleNameSubmit(event)" class="space-y-4">
+            <form onsubmit="saveUserSettings(event)" class="space-y-4">
                 <div>
-                    <input type="text" id="usernameInput" required placeholder="e.g. Kavibharathi" 
-                        class="w-full bg-slate-50 border border-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-slate-900 placeholder-slate-400 rounded-2xl px-4 py-3.5 text-center font-semibold text-base outline-none transition">
+                    <label class="block text-left text-xs font-bold text-slate-400 mb-1">Your Name</label>
+                    <input type="text" id="inputUsername" required placeholder="e.g. Aro or Kavi" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 font-extrabold outline-none focus:border-rose-500 transition">
                 </div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold py-3.5 px-6 rounded-2xl shadow-lg shadow-emerald-600/20 transition duration-200 flex items-center justify-center gap-2 text-sm sm:text-base">
-                    <span>Continue to Dashboard</span>
-                    <i class="fa-solid fa-arrow-right text-xs"></i>
+
+                <div>
+                    <label class="block text-left text-xs font-bold text-slate-400 mb-2">Pointer Color</label>
+                    <div class="grid grid-cols-6 gap-2">
+                        <button type="button" onclick="selectColor('red')" class="color-btn h-9 rounded-xl bg-red-500 border-2 border-white flex items-center justify-center" data-color="red">🔴</button>
+                        <button type="button" onclick="selectColor('blue')" class="color-btn h-9 rounded-xl bg-blue-500 border-2 border-transparent flex items-center justify-center" data-color="blue">🔵</button>
+                        <button type="button" onclick="selectColor('emerald')" class="color-btn h-9 rounded-xl bg-emerald-500 border-2 border-transparent flex items-center justify-center" data-color="emerald">🟢</button>
+                        <button type="button" onclick="selectColor('purple')" class="color-btn h-9 rounded-xl bg-purple-500 border-2 border-transparent flex items-center justify-center" data-color="purple">🟣</button>
+                        <button type="button" onclick="selectColor('amber')" class="color-btn h-9 rounded-xl bg-amber-500 border-2 border-transparent flex items-center justify-center" data-color="amber">🟠</button>
+                        <button type="button" onclick="selectColor('pink')" class="color-btn h-9 rounded-xl bg-pink-500 border-2 border-transparent flex items-center justify-center" data-color="pink">🩷</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-extrabold py-3.5 rounded-2xl shadow-lg shadow-rose-600/20 transition active:scale-95 text-sm">
+                    Ready to Play! 🚀
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Edit Name Modal -->
-    <div id="editNameModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-300 hidden">
-        <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-xs sm:max-w-md w-full shadow-2xl text-center">
-            <h3 class="text-lg sm:text-xl font-bold text-slate-900 mb-4">Update Display Name</h3>
-            <input type="text" id="editUsernameInput" class="w-full bg-slate-50 border border-slate-300 focus:border-emerald-500 text-slate-900 rounded-2xl px-4 py-3 text-center font-semibold outline-none mb-5 text-sm sm:text-base">
-            <div class="flex gap-2.5">
-                <button onclick="closeEditNameModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-semibold py-3 rounded-xl text-xs sm:text-sm transition">Cancel</button>
-                <button onclick="saveUpdatedName()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold py-3 rounded-xl shadow-md shadow-emerald-600/20 text-xs sm:text-sm transition">Save</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Navigation Header -->
-    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40">
-        <div class="max-w-5xl mx-auto px-3.5 sm:px-6 py-3 flex items-center justify-between gap-2">
-            <!-- User Profile Greeting -->
-            <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-md shadow-emerald-500/20 flex-shrink-0">
-                    <span id="userAvatar">U</span>
+    <!-- Header Navigation -->
+    <header class="bg-slate-900/90 border-b border-slate-800 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div id="playerAvatar" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xl shadow-md">
+                    🔴
                 </div>
-                <div class="min-w-0">
-                    <div class="flex items-center gap-1.5">
-                        <span id="userGreeting" class="text-sm sm:text-base font-extrabold text-slate-900 truncate max-w-[130px] xs:max-w-[180px] sm:max-w-xs">Hey, User</span>
-                        <button onclick="openEditNameModal()" title="Edit Name" class="text-slate-400 hover:text-emerald-600 active:scale-90 text-xs transition p-1 rounded-md">
-                            <i class="fa-solid fa-pen"></i>
-                        </button>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 id="playerGreeting" class="font-black text-base sm:text-lg text-white">Player</h1>
+                        <button onclick="openSettingsModal()" class="text-slate-500 hover:text-slate-300 text-xs p-1" title="Customize Pawn"><i class="fa-solid fa-palette"></i> Edit</button>
                     </div>
-                    <p class="text-[11px] sm:text-xs text-slate-500 truncate hidden xs:block">Smart Daily Attendance Tracker</p>
+                    <p class="text-[11px] text-slate-400">Slow Ludo School Attendance</p>
                 </div>
             </div>
 
-            <!-- Controls: Storage Badge & Clock -->
-            <div class="flex items-center gap-2 flex-shrink-0">
-                <div id="storageBadge" class="hidden md:flex items-center gap-1.5 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-full text-[11px] font-medium text-slate-600" title="Cloud Sync">
-                    <span id="storageIcon" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span id="storageText">Google Sheets Sync</span>
-                </div>
-
-                <div id="currentDateDisplay" class="bg-slate-50 border border-slate-200/90 text-slate-700 text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-200">
-                    <i class="fa-regular fa-calendar-days text-emerald-600 text-xs"></i>
-                    <span id="clockText" class="text-[11px] sm:text-xs">--</span>
-                </div>
+            <!-- Leaderboard -->
+            <div id="leaderboardBar" class="flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-2xl text-xs font-bold">
+                <span class="text-slate-500">Scores:</span>
+                <span id="scoreDisplay" class="text-white">Aro: 0 | Kavi: 0</span>
             </div>
         </div>
     </header>
 
-    <!-- Main Content Canvas -->
-    <main class="max-w-5xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 flex-grow space-y-4 sm:space-y-6">
+    <!-- Main Canvas -->
+    <main class="max-w-4xl w-full mx-auto px-3 sm:px-6 py-4 flex-grow space-y-4">
         
-        <!-- Main Calendar Card -->
-        <section class="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-sm">
+        <section class="bg-slate-900 border border-slate-800 rounded-3xl p-3 sm:p-5 shadow-2xl relative overflow-hidden">
             
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-slate-100">
-                <div class="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-3 w-full sm:w-auto">
-                    <button id="prevMonthBtn" onclick="navigateMonth(-1)" class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/90 text-slate-700 flex items-center justify-center transition active:scale-95 flex-shrink-0" title="Previous Month">
-                        <i class="fa-solid fa-chevron-left text-xs sm:text-sm"></i>
-                    </button>
-
-                    <div class="flex items-center gap-1.5 flex-grow justify-center sm:flex-grow-0">
-                        <select id="monthSelect" onchange="onDateSelectorChange()" class="bg-slate-50 border border-slate-200/90 text-slate-900 text-sm sm:text-base font-extrabold rounded-xl px-2.5 py-2 sm:px-3 sm:py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
-                            <option value="0">January</option>
-                            <option value="1">February</option>
-                            <option value="2">March</option>
-                            <option value="3">April</option>
-                            <option value="4">May</option>
-                            <option value="5">June</option>
-                            <option value="6">July</option>
-                            <option value="7">August</option>
-                            <option value="8">September</option>
-                            <option value="9">October</option>
-                            <option value="10">November</option>
-                            <option value="11">December</option>
-                        </select>
-
-                        <select id="yearSelect" onchange="onDateSelectorChange()" class="bg-slate-50 border border-slate-200/90 text-slate-900 text-sm sm:text-base font-extrabold rounded-xl px-2.5 py-2 sm:px-3 sm:py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
-                        </select>
-                    </div>
-
-                    <button id="nextMonthBtn" onclick="navigateMonth(1)" class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/90 text-slate-700 flex items-center justify-center transition active:scale-95 flex-shrink-0" title="Next Month">
-                        <i class="fa-solid fa-chevron-right text-xs sm:text-sm"></i>
-                    </button>
+            <div class="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <button onclick="navigateMonth(-1)" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs transition"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span id="monthYearTitle" class="font-extrabold text-sm sm:text-base text-white px-2">September 2026</span>
+                    <button onclick="navigateMonth(1)" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs transition"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
 
-                <div class="flex items-center justify-end gap-2 w-full sm:w-auto pt-1 sm:pt-0">
-                    <button onclick="jumpToToday()" class="flex-1 sm:flex-none bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/90 text-xs font-bold px-3.5 py-2.5 rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-bullseye text-xs"></i>
-                        <span>Jump to Today</span>
-                    </button>
-
-                    <button onclick="clearMonthData()" class="bg-slate-50 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200/90 text-slate-500 border border-slate-200/90 text-xs font-bold px-3 py-2.5 rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5" title="Reset current month state">
-                        <i class="fa-solid fa-rotate-left"></i>
-                        <span class="sm:hidden">Reset</span>
-                    </button>
-                </div>
+                <button onclick="jumpToToday()" class="bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 text-xs font-bold px-3 py-2 rounded-xl transition">Jump to Today</button>
             </div>
 
             <div class="calendar-grid gap-1 sm:gap-2 text-center mb-2">
-                <div class="text-[10px] sm:text-xs font-extrabold text-rose-500 py-1 uppercase tracking-wider">Sun</div>
-                <div class="text-[10px] sm:text-xs font-extrabold text-slate-400 py-1 uppercase tracking-wider">Mon</div>
-                <div class="text-[10px] sm:text-xs font-extrabold text-slate-400 py-1 uppercase tracking-wider">Tue</div>
-                <div class="text-[10px] sm:text-xs font-extrabold text-slate-400 py-1 uppercase tracking-wider">Wed</div>
-                <div class="text-[10px] sm:text-xs font-extrabold text-slate-400 py-1 uppercase tracking-wider">Thu</div>
-                <div class="text-[10px] sm:text-xs font-extrabold text-slate-400 py-1 uppercase tracking-wider">Fri</div>
-                <div class="text-[10px] sm:text-xs font-extrabold text-emerald-600 py-1 uppercase tracking-wider">Sat</div>
+                <div class="text-[10px] font-black text-rose-500 uppercase tracking-wider py-1">Sun</div>
+                <div class="text-[10px] font-black text-slate-500 uppercase tracking-wider py-1">Mon</div>
+                <div class="text-[10px] font-black text-slate-500 uppercase tracking-wider py-1">Tue</div>
+                <div class="text-[10px] font-black text-slate-500 uppercase tracking-wider py-1">Wed</div>
+                <div class="text-[10px] font-black text-slate-500 uppercase tracking-wider py-1">Thu</div>
+                <div class="text-[10px] font-black text-slate-500 uppercase tracking-wider py-1">Fri</div>
+                <div class="text-[10px] font-black text-emerald-500 uppercase tracking-wider py-1">Sat</div>
             </div>
 
-            <div id="calendarGrid" class="calendar-grid gap-1 sm:gap-2">
-            </div>
-
-            <!-- Legend with Location Pin Indicator -->
-            <div class="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-[11px] sm:text-xs text-slate-500">
-                <div class="flex items-center gap-3 flex-wrap">
-                    <div class="flex items-center gap-1.5">
-                        <span class="w-3.5 h-3.5 rounded bg-emerald-500 border border-emerald-600 flex items-center justify-center text-[9px] text-white"><i class="fa-solid fa-location-dot"></i></span>
-                        <span class="font-semibold text-slate-700">Present (Location Active)</span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                        <span class="w-3.5 h-3.5 rounded bg-slate-50 border border-slate-200"></span>
-                        <span class="font-semibold text-slate-700">Unmarked</span>
-                    </div>
-                </div>
-
-                <div class="text-slate-400 text-[11px]">
-                    <i class="fa-solid fa-hand-pointer mr-1 text-emerald-600"></i> Tap any date to toggle attendance status
-                </div>
-            </div>
-        </section>
-
-        <!-- Stats Section -->
-        <section class="grid grid-cols-2 gap-3 sm:gap-4">
-            <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
-                <div>
-                    <span class="text-[10px] sm:text-xs font-extrabold text-slate-400 uppercase tracking-wider block mb-0.5 sm:mb-1">This Month Present</span>
-                    <div class="flex items-baseline gap-1.5">
-                        <h3 id="statMonthPresent" class="text-2xl sm:text-3xl font-black text-slate-900">0</h3>
-                        <span id="statMonthTotal" class="text-[11px] sm:text-xs font-semibold text-slate-500">/ 0 days</span>
-                    </div>
-                </div>
-                <div class="w-9 h-9 sm:w-12 sm:h-12 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-xl sm:rounded-2xl flex items-center justify-center text-lg sm:text-xl shadow-sm self-end sm:self-auto">
-                    <i class="fa-solid fa-calendar-check"></i>
-                </div>
-            </div>
-
-            <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
-                <div>
-                    <span class="text-[10px] sm:text-xs font-extrabold text-slate-400 uppercase tracking-wider block mb-0.5 sm:mb-1">Overall Days Present</span>
-                    <div class="flex items-baseline gap-1.5">
-                        <h3 id="statOverallPresent" class="text-2xl sm:text-3xl font-black text-slate-900">0</h3>
-                        <span class="text-[11px] sm:text-xs font-semibold text-slate-500">all-time total</span>
-                    </div>
-                </div>
-                <div class="w-9 h-9 sm:w-12 sm:h-12 bg-blue-50 border border-blue-100 text-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center text-lg sm:text-xl shadow-sm self-end sm:self-auto">
-                    <i class="fa-solid fa-award"></i>
-                </div>
-            </div>
+            <div id="calendarGrid" class="calendar-grid gap-1.5 sm:gap-2"></div>
         </section>
     </main>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 bg-slate-900/95 text-white px-4 py-2.5 sm:py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 transition-all duration-300 transform translate-y-16 opacity-0 pointer-events-none z-50 text-xs sm:text-sm font-semibold max-w-[90vw] whitespace-nowrap">
-        <div id="toastIcon" class="text-emerald-400 text-base"><i class="fa-solid fa-circle-check"></i></div>
-        <span id="toastMsg" class="truncate">Notification message</span>
+    <!-- Chatbot Assistant Popup -->
+    <div class="fixed bottom-3 left-0 right-0 max-w-lg mx-auto px-4 z-40 pointer-events-none">
+        <div id="chatbotCard" class="bg-slate-900/95 border border-slate-700/80 backdrop-blur-xl p-3.5 rounded-2xl shadow-2xl flex items-start gap-3 pointer-events-auto chat-pop">
+            <div id="botAvatar" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-xl shadow-md flex-shrink-0 animate-bounce">
+                🤖
+            </div>
+            <div class="flex-grow min-w-0">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-rose-400">Ludo Bot Assistant</span>
+                    <span id="botMood" class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-bold">Surprised! 😲</span>
+                </div>
+                <p id="botSpeech" class="text-xs text-slate-200 font-semibold mt-1 leading-snug">
+                    Hey! Step onto today's date tile to race your Ludo pawn forward!
+                </p>
+            </div>
+        </div>
     </div>
 
-    <footer class="bg-white border-t border-slate-200/80 py-3.5 text-center text-[11px] text-slate-500 mt-2">
-        <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-1">
-            <p>Smart Attendance WebApp &bull; Cloud Powered by Google Sheets</p>
-            <p id="storageEngineDetail" class="text-slate-400">Google Sheets API Connected</p>
-        </div>
-    </footer>
-
     <script>
-        // GOOGLE APPS SCRIPT WEB APP URL INTEGRATED:
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyT-WY8onYoUHI-kQMWtIFGBuaotdBYzWYvG7FHBpkUhRh7eCduTAzfhVrIvgeAMdaG/exec";
 
         let state = {
-            user: { name: localStorage.getItem('attendance_app_user') || '' },
-            attendance: {}, 
-            currentViewYear: new Date().getFullYear(),
-            currentViewMonth: new Date().getMonth()
+            currentUser: localStorage.getItem('ludo_app_user') || 'Aro',
+            currentColor: localStorage.getItem('ludo_app_color') || 'red',
+            allAttendance: {},
+            userProfiles: {},
+            viewYear: new Date().getFullYear(),
+            viewMonth: new Date().getMonth()
         };
 
-        const nameModal = document.getElementById('nameModal');
-        const editNameModal = document.getElementById('editNameModal');
-        const usernameInput = document.getElementById('usernameInput');
-        const editUsernameInput = document.getElementById('editUsernameInput');
-        const userGreeting = document.getElementById('userGreeting');
-        const userAvatar = document.getElementById('userAvatar');
-        
-        const monthSelect = document.getElementById('monthSelect');
-        const yearSelect = document.getElementById('yearSelect');
-        const calendarGrid = document.getElementById('calendarGrid');
-        
-        const statMonthPresent = document.getElementById('statMonthPresent');
-        const statMonthTotal = document.getElementById('statMonthTotal');
-        const statOverallPresent = document.getElementById('statOverallPresent');
-        const clockText = document.getElementById('clockText');
+        const colorClasses = {
+            red: { bg: 'bg-red-500', text: 'text-red-500', shadow: 'rgba(239, 68, 68, 0.8)', emoji: '🔴' },
+            blue: { bg: 'bg-blue-500', text: 'text-blue-500', shadow: 'rgba(59, 130, 246, 0.8)', emoji: '🔵' },
+            emerald: { bg: 'bg-emerald-500', text: 'text-emerald-500', shadow: 'rgba(16, 185, 129, 0.8)', emoji: '🟢' },
+            purple: { bg: 'bg-purple-500', text: 'text-purple-500', shadow: 'rgba(168, 85, 247, 0.8)', emoji: '🟣' },
+            amber: { bg: 'bg-amber-500', text: 'text-amber-500', shadow: 'rgba(245, 158, 11, 0.8)', emoji: '🟠' },
+            pink: { bg: 'bg-pink-500', text: 'text-pink-500', shadow: 'rgba(236, 72, 153, 0.8)', emoji: '🩷' }
+        };
 
-        async function fetchUserDataFromSheets() {
-            if (!state.user.name || !GOOGLE_SCRIPT_URL) return;
-            showToast("Syncing with cloud...", "info");
-            
-            try {
-                const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getData&user=${encodeURIComponent(state.user.name)}`);
-                const data = await response.json();
-                if (data.status === "success") {
-                    state.attendance = data.attendance || {};
-                    renderCalendar();
-                    showToast("Cloud sync complete!", "success");
+        const settingsModal = document.getElementById('settingsModal');
+        const inputUsername = document.getElementById('inputUsername');
+        const calendarGrid = document.getElementById('calendarGrid');
+        const monthYearTitle = document.getElementById('monthYearTitle');
+        const playerGreeting = document.getElementById('playerGreeting');
+        const playerAvatar = document.getElementById('playerAvatar');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const botSpeech = document.getElementById('botSpeech');
+        const botMood = document.getElementById('botMood');
+        const botAvatar = document.getElementById('botAvatar');
+
+        function openSettingsModal() {
+            inputUsername.value = state.currentUser;
+            selectColor(state.currentColor);
+            settingsModal.classList.remove('hidden');
+        }
+
+        function selectColor(col) {
+            state.currentColor = col;
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                if (btn.dataset.color === col) {
+                    btn.classList.replace('border-transparent', 'border-white');
+                } else {
+                    btn.classList.replace('border-white', 'border-transparent');
                 }
-            } catch (err) {
-                console.error("Cloud fetch failed:", err);
-                showToast("Offline or fetch failed", "info");
+            });
+        }
+
+        function saveUserSettings(e) {
+            e.preventDefault();
+            const val = inputUsername.value.trim();
+            if (val) {
+                state.currentUser = val;
+                localStorage.setItem('ludo_app_user', val);
+                localStorage.setItem('ludo_app_color', state.currentColor);
+                updateHeaderUI();
+                settingsModal.classList.add('hidden');
+                fetchAllData();
+                triggerBotTalk('customized');
             }
         }
 
-        async function syncSingleAttendanceToSheets(dateKey, isPresent) {
-            if (!GOOGLE_SCRIPT_URL) return;
-            
+        function updateHeaderUI() {
+            const conf = colorClasses[state.currentColor] || colorClasses.red;
+            playerGreeting.innerText = state.currentUser;
+            playerAvatar.innerText = conf.emoji;
+        }
+
+        async function fetchAllData() {
+            try {
+                const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=getAllData`);
+                const data = await res.json();
+                if (data.status === "success") {
+                    state.allAttendance = data.allAttendance || {};
+                    state.userProfiles = data.userProfiles || {};
+                    renderBoard();
+                }
+            } catch (err) {
+                renderBoard();
+            }
+        }
+
+        async function saveAttendance(dateKey, isPresent) {
             try {
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({
                         action: "saveAttendance",
-                        user: state.user.name,
+                        user: state.currentUser,
+                        color: state.currentColor,
                         dateKey: dateKey,
                         status: isPresent ? "PRESENT" : "ABSENT"
                     })
                 });
-            } catch (err) {
-                console.error("Cloud post failed:", err);
-            }
-        }
-
-        async function syncClearMonthToSheets(prefix) {
-            if (!GOOGLE_SCRIPT_URL) return;
-            
-            try {
-                await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: "clearMonth",
-                        user: state.user.name,
-                        prefix: prefix
-                    })
-                });
-            } catch (err) {
-                console.error("Clear month sync failed:", err);
-            }
-        }
-
-        function showNameModal() {
-            nameModal.classList.remove('hidden');
-            setTimeout(() => usernameInput.focus(), 150);
-        }
-
-        function handleNameSubmit(event) {
-            event.preventDefault();
-            const val = usernameInput.value.trim();
-            if (val) {
-                state.user.name = val;
-                localStorage.setItem('attendance_app_user', val);
-                updateUserUI();
-                nameModal.classList.add('hidden');
-                fetchUserDataFromSheets();
-            }
-        }
-
-        function openEditNameModal() {
-            editUsernameInput.value = state.user.name;
-            editNameModal.classList.remove('hidden');
-            setTimeout(() => editUsernameInput.focus(), 150);
-        }
-
-        function closeEditNameModal() {
-            editNameModal.classList.add('hidden');
-        }
-
-        function saveUpdatedName() {
-            const val = editUsernameInput.value.trim();
-            if (val) {
-                state.user.name = val;
-                localStorage.setItem('attendance_app_user', val);
-                updateUserUI();
-                closeEditNameModal();
-                fetchUserDataFromSheets();
-            }
-        }
-
-        function updateUserUI() {
-            if (state.user.name) {
-                userGreeting.innerText = `Hey, ${state.user.name}`;
-                userAvatar.innerText = state.user.name.charAt(0).toUpperCase();
-            }
-        }
-
-        function initYearSelect() {
-            yearSelect.innerHTML = '';
-            const currentYear = new Date().getFullYear();
-            for (let y = currentYear - 5; y <= currentYear + 5; y++) {
-                const opt = document.createElement('option');
-                opt.value = y;
-                opt.innerText = y;
-                yearSelect.appendChild(opt);
-            }
-        }
-
-        function updateDateSelectors() {
-            monthSelect.value = state.currentViewMonth;
-            yearSelect.value = state.currentViewYear;
-        }
-
-        function onDateSelectorChange() {
-            state.currentViewMonth = parseInt(monthSelect.value, 10);
-            state.currentViewYear = parseInt(yearSelect.value, 10);
-            renderCalendar();
+            } catch(e) {}
         }
 
         function navigateMonth(delta) {
-            state.currentViewMonth += delta;
-            if (state.currentViewMonth > 11) {
-                state.currentViewMonth = 0;
-                state.currentViewYear++;
-            } else if (state.currentViewMonth < 0) {
-                state.currentViewMonth = 11;
-                state.currentViewYear--;
-            }
-            updateDateSelectors();
-            renderCalendar();
+            state.viewMonth += delta;
+            if (state.viewMonth > 11) { state.viewMonth = 0; state.viewYear++; }
+            else if (state.viewMonth < 0) { state.viewMonth = 11; state.viewYear--; }
+            renderBoard();
         }
 
         function jumpToToday() {
             const now = new Date();
-            state.currentViewYear = now.getFullYear();
-            state.currentViewMonth = now.getMonth();
-            updateDateSelectors();
-            renderCalendar();
-            showToast('Jumped to current month', 'info');
+            state.viewYear = now.getFullYear();
+            state.viewMonth = now.getMonth();
+            renderBoard();
         }
 
-        function renderCalendar() {
+        function renderBoard() {
             calendarGrid.innerHTML = '';
+            
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            monthYearTitle.innerText = `${monthNames[state.viewMonth]} ${state.viewYear}`;
 
-            const year = state.currentViewYear;
-            const month = state.currentViewMonth;
+            const year = state.viewYear;
+            const month = state.viewMonth;
 
             const firstDayIndex = new Date(year, month, 1).getDay();
             const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
-
             const today = new Date();
             const isCurrentMonthView = (today.getFullYear() === year && today.getMonth() === month);
-            const todayDateNum = today.getDate();
 
             for (let i = 0; i < firstDayIndex; i++) {
                 const emptyCell = document.createElement('div');
-                emptyCell.className = 'day-card rounded-xl sm:rounded-2xl bg-slate-50/50 border border-slate-100 pointer-events-none opacity-40';
+                emptyCell.className = 'min-h-[64px] sm:min-h-[76px] bg-slate-950/50 border border-slate-900 rounded-2xl opacity-20 pointer-events-none';
                 calendarGrid.appendChild(emptyCell);
             }
 
+            let scores = {};
+
             for (let day = 1; day <= totalDaysInMonth; day++) {
                 const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const isPresent = !!state.attendance[dateKey];
-                const isToday = isCurrentMonthView && (day === todayDateNum);
-
-                const card = document.createElement('div');
                 
-                let classes = 'day-card rounded-xl sm:rounded-2xl p-1.5 sm:p-2 flex flex-col justify-between items-center cursor-pointer select-none relative font-medium border ';
+                let presentUsersOnTile = [];
 
-                if (isPresent) {
-                    classes += 'bg-emerald-500 border-emerald-600 text-white shadow-md shadow-emerald-500/20 hover:bg-emerald-600';
-                } else {
-                    classes += 'bg-slate-50 border-slate-200/90 text-slate-700 hover:bg-slate-100 hover:border-slate-300';
-                }
-
-                if (isToday) {
-                    classes += ' ring-2 ring-emerald-500 ring-offset-1 ring-offset-white font-black';
-                }
-
-                card.className = classes;
-
-                // LOCATION POINTER ICON ON PRESENT DAYS
-                let iconHTML = isPresent 
-                    ? `<span class="text-[11px] sm:text-xs bg-white/20 px-1.5 py-0.5 rounded-md text-white shadow-sm flex items-center justify-center"><i class="fa-solid fa-location-dot animate-bounce"></i></span>`
-                    : `<span class="text-[9px] sm:text-[10px] text-slate-300 font-normal">--</span>`;
-
-                let todayBadge = isToday 
-                    ? `<span class="absolute -top-1 -right-1 ${isPresent ? 'bg-slate-900 text-white' : 'bg-emerald-600 text-white'} text-[8px] sm:text-[9px] px-1 sm:px-1.5 py-0.5 rounded-full font-black shadow-sm">TODAY</span>` 
-                    : '';
-
-                card.innerHTML = `
-                    ${todayBadge}
-                    <span class="text-xs sm:text-sm ${isToday && !isPresent ? 'text-emerald-600 font-black' : ''}">${day}</span>
-                    <div class="mt-0.5 sm:mt-0">${iconHTML}</div>
-                `;
-
-                card.addEventListener('click', () => {
-                    toggleAttendance(dateKey, day);
-                });
-
-                calendarGrid.appendChild(card);
-            }
-
-            updateMetrics();
-        }
-
-        function toggleAttendance(dateKey, dayNumber) {
-            let newState = false;
-            if (state.attendance[dateKey]) {
-                delete state.attendance[dateKey];
-                showToast(`Day ${dayNumber}: Unmarked`, 'info');
-            } else {
-                state.attendance[dateKey] = true;
-                newState = true;
-                showToast(`Day ${dayNumber}: Marked Present`, 'present');
-            }
-
-            syncSingleAttendanceToSheets(dateKey, newState);
-            renderCalendar();
-        }
-
-        function clearMonthData() {
-            const year = state.currentViewYear;
-            const monthStr = String(state.currentViewMonth + 1).padStart(2, '0');
-            const prefix = `${year}-${monthStr}`;
-
-            let count = 0;
-            for (let key in state.attendance) {
-                if (key.startsWith(prefix)) {
-                    delete state.attendance[key];
-                    count++;
-                }
-            }
-
-            if (count > 0) {
-                syncClearMonthToSheets(prefix);
-                renderCalendar();
-                showToast(`Cleared ${count} entries for this month`, 'info');
-            } else {
-                showToast('No entries to clear for this month', 'info');
-            }
-        }
-
-        function updateMetrics() {
-            const year = state.currentViewYear;
-            const month = state.currentViewMonth;
-            const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
-            const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
-
-            let monthPresent = 0;
-            let overallPresent = 0;
-
-            for (let key in state.attendance) {
-                if (state.attendance[key]) {
-                    overallPresent++;
-                    if (key.startsWith(monthPrefix)) {
-                        monthPresent++;
+                for (let user in state.allAttendance) {
+                    if (state.allAttendance[user][dateKey]) {
+                        presentUsersOnTile.push(user);
+                        scores[user] = (scores[user] || 0) + 1;
                     }
                 }
-            }
 
-            statMonthPresent.innerText = monthPresent;
-            statMonthTotal.innerText = `/ ${totalDaysInMonth} days`;
-            statOverallPresent.innerText = overallPresent;
-        }
+                const isToday = isCurrentMonthView && (day === today.getDate());
 
-        let toastTimeout;
-        function showToast(message, type = 'info') {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toastMsg');
-            const toastIcon = document.getElementById('toastIcon');
+                const tile = document.createElement('div');
+                tile.className = `min-h-[64px] sm:min-h-[76px] rounded-2xl p-1.5 flex flex-col justify-between items-center cursor-pointer select-none border transition-all duration-200 relative ${
+                    isToday ? 'border-rose-500 bg-slate-800/80 ring-2 ring-rose-500/20' : 'border-slate-800 bg-slate-900/60 hover:bg-slate-800/50'
+                }`;
 
-            toastMsg.innerText = message;
+                let pawnsHTML = '';
 
-            if (type === 'present') {
-                toastIcon.className = 'text-emerald-400 text-base';
-                toastIcon.innerHTML = '<i class="fa-solid fa-location-dot"></i>';
-            } else if (type === 'success') {
-                toastIcon.className = 'text-emerald-400 text-base';
-                toastIcon.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i>';
-            } else {
-                toastIcon.className = 'text-slate-400 text-base';
-                toastIcon.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
-            }
+                if (presentUsersOnTile.length > 0) {
+                    pawnsHTML = `<div class="flex items-center justify-center gap-1 bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-700 shadow-lg pawn-anim">`;
+                    presentUsersOnTile.forEach(u => {
+                        let cKey = (u === state.currentUser) ? state.currentColor : (state.userProfiles[u]?.color || 'blue');
+                        let conf = colorClasses[cKey] || colorClasses.red;
+                        pawnsHTML += `<i class="fa-solid fa-chess-pawn ${conf.text} text-lg sm:text-xl" title="${u}"></i>`;
+                    });
+                    pawnsHTML += `</div>`;
+                } else {
+                    pawnsHTML = `<span class="text-[10px] text-slate-700">--</span>`;
+                }
 
-            toast.classList.remove('translate-y-16', 'opacity-0', 'pointer-events-none');
+                tile.innerHTML = `
+                    <div class="w-full flex items-center justify-between text-[11px] font-extrabold ${isToday ? 'text-rose-400' : 'text-slate-400'}">
+                        <span>${day}</span>
+                        ${isToday ? '<span class="text-[8px] bg-rose-500 text-white px-1 rounded-md">TODAY</span>' : ''}
+                    </div>
+                    <div class="my-auto">${pawnsHTML}</div>
+                `;
 
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.add('translate-y-16', 'opacity-0', 'pointer-events-none');
-            }, 2200);
-        }
+                tile.addEventListener('click', () => {
+                    const userRecords = state.allAttendance[state.currentUser] || {};
+                    const currentlyPresent = !!userRecords[dateKey];
+                    
+                    if (!state.allAttendance[state.currentUser]) {
+                        state.allAttendance[state.currentUser] = {};
+                    }
 
-        function startLiveClock() {
-            function update() {
-                const now = new Date();
-                clockText.innerText = now.toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric'
+                    if (currentlyPresent) {
+                        delete state.allAttendance[state.currentUser][dateKey];
+                        saveAttendance(dateKey, false);
+                        triggerBotTalk('absent', day);
+                    } else {
+                        state.allAttendance[state.currentUser][dateKey] = true;
+                        saveAttendance(dateKey, true);
+                        triggerBotTalk('present', day);
+                    }
+
+                    renderBoard();
                 });
+
+                calendarGrid.appendChild(tile);
             }
-            update();
-            setInterval(update, 10000);
+
+            // Update Leaderboard Bar
+            let scoreText = [];
+            for (let u in scores) {
+                scoreText.push(`${u}: ${scores[u]}`);
+            }
+            scoreDisplay.innerText = scoreText.length ? scoreText.join(" | ") : "No scores yet";
+        }
+
+        // EMOTIONAL CHATBOT DIALOGUE ENGINE
+        function triggerBotTalk(event, day) {
+            let msg = "";
+            let mood = "Happy! 😀";
+            let avatar = "🤖";
+
+            if (event === 'present') {
+                const reactions = [
+                    `WOAH! ${state.currentUser} stepped onto Day ${day}! Moving like a true Ludo master! 🎲🔥`,
+                    `YES! ${state.currentUser} marked present for Day ${day}! School streak is ON! 🚀`,
+                    `BOOM! Day ${day} secured! ${state.currentUser}'s Ludo pawn advances forward! 🎯`,
+                    `Unstoppable! ${state.currentUser} just claimed Day ${day}! What a legend! 👑`
+                ];
+                msg = reactions[Math.floor(Math.random() * reactions.length)];
+                mood = "Hyped! 🔥";
+                avatar = "💥";
+            } else if (event === 'absent') {
+                const reactions = [
+                    `OH NO! ${state.currentUser} stepped back from Day ${day}... Kavi might overtake you! 😱`,
+                    `WAIT! Taking leave on Day ${day}? The pawn moved back! 🙈`,
+                    `GASP! ${state.currentUser} removed attendance on Day ${day}! Don't fall behind! ⚠️`
+                ];
+                msg = reactions[Math.floor(Math.random() * reactions.length)];
+                mood = "Shocked! 😲";
+                avatar = "😱";
+            } else if (event === 'customized') {
+                msg = `Looking sleek! ${state.currentUser} updated their style with the ${state.currentColor.toUpperCase()} Ludo Pawn! 🎨`;
+                mood = "Stylish! ✨";
+                avatar = "😎";
+            }
+
+            botSpeech.innerText = msg;
+            botMood.innerText = mood;
+            botAvatar.innerText = avatar;
+
+            const card = document.getElementById('chatbotCard');
+            card.classList.remove('chat-pop');
+            void card.offsetWidth; // Trigger reflow
+            card.classList.add('chat-pop');
         }
 
         window.onload = function() {
-            startLiveClock();
-            initYearSelect();
-            updateDateSelectors();
-            
-            if (!state.user.name) {
-                showNameModal();
+            updateHeaderUI();
+            if (!localStorage.getItem('ludo_app_user')) {
+                openSettingsModal();
             } else {
-                updateUserUI();
-                fetchUserDataFromSheets();
+                fetchAllData();
             }
         };
     </script>
