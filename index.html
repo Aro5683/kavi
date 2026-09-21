@@ -29,19 +29,19 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between bg-slate-950 text-slate-100 antialiased selection:bg-rose-500 selection:text-white pb-24">
 
-    <!-- Settings / Name Customization Modal -->
+    <!-- Modal for User Setup -->
     <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl relative">
             <div class="w-16 h-16 bg-rose-500/10 border border-rose-500/30 text-rose-500 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3">
                 <i class="fa-solid fa-chess-pawn"></i>
             </div>
-            <h2 class="text-xl font-black mb-1">Select Your Player 🎲</h2>
-            <p class="text-slate-400 text-xs mb-5">Pick your name and pointer color so everyone sees your progress!</p>
+            <h2 class="text-xl font-black mb-1">Select Player 🎲</h2>
+            <p class="text-slate-400 text-xs mb-5">Type your name (Aro or Kavi) and pick your pawn color!</p>
             
             <form onsubmit="saveUserSettings(event)" class="space-y-4">
                 <div>
                     <label class="block text-left text-xs font-bold text-slate-400 mb-1">Your Name</label>
-                    <input type="text" id="inputUsername" required placeholder="e.g. Aro or Kavi" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 font-extrabold outline-none focus:border-rose-500 transition">
+                    <input type="text" id="inputUsername" required placeholder="Aro or Kavi" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 font-extrabold outline-none focus:border-rose-500 transition">
                 </div>
 
                 <div>
@@ -49,8 +49,8 @@
                     <div class="grid grid-cols-6 gap-2">
                         <button type="button" onclick="selectColor('red')" class="color-btn h-9 rounded-xl bg-red-500 border-2 border-white flex items-center justify-center" data-color="red">🔴</button>
                         <button type="button" onclick="selectColor('blue')" class="color-btn h-9 rounded-xl bg-blue-500 border-2 border-transparent flex items-center justify-center" data-color="blue">🔵</button>
-                        <button type="button" onclick="selectColor('emerald')" class="color-btn h-9 rounded-xl bg-emerald-500 border-2 border-transparent flex items-center justify-center" data-color="emerald">🟢</button>
                         <button type="button" onclick="selectColor('purple')" class="color-btn h-9 rounded-xl bg-purple-500 border-2 border-transparent flex items-center justify-center" data-color="purple">🟣</button>
+                        <button type="button" onclick="selectColor('emerald')" class="color-btn h-9 rounded-xl bg-emerald-500 border-2 border-transparent flex items-center justify-center" data-color="emerald">🟢</button>
                         <button type="button" onclick="selectColor('amber')" class="color-btn h-9 rounded-xl bg-amber-500 border-2 border-transparent flex items-center justify-center" data-color="amber">🟠</button>
                         <button type="button" onclick="selectColor('pink')" class="color-btn h-9 rounded-xl bg-pink-500 border-2 border-transparent flex items-center justify-center" data-color="pink">🩷</button>
                     </div>
@@ -73,13 +73,12 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <h1 id="playerGreeting" class="font-black text-base sm:text-lg text-white">Player</h1>
-                        <button onclick="openSettingsModal()" class="text-slate-500 hover:text-slate-300 text-xs p-1" title="Customize Pawn"><i class="fa-solid fa-palette"></i> Switch</button>
+                        <button onclick="openSettingsModal()" class="text-slate-500 hover:text-slate-300 text-xs p-1"><i class="fa-solid fa-palette"></i> Switch</button>
                     </div>
                     <p class="text-[11px] text-slate-400">Shared Ludo Track</p>
                 </div>
             </div>
 
-            <!-- Live Status Pulse -->
             <div class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-full text-[11px] font-bold text-emerald-400">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
                 <span>Live Multiplayer</span>
@@ -90,34 +89,28 @@
     <!-- Main Board -->
     <main class="max-w-4xl w-full mx-auto px-3 sm:px-6 py-4 flex-grow space-y-4">
         
-        <!-- Stats Leaderboard Card -->
         <section class="bg-slate-900 border border-slate-800 rounded-3xl p-4 shadow-xl">
             <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
                 <h2 class="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-2">
                     <i class="fa-solid fa-trophy text-amber-500"></i> Attendance Standings
                 </h2>
-                <span id="currentMonthLabel" class="text-xs font-extrabold text-rose-400">This Month</span>
+                <span id="currentMonthLabel" class="text-xs font-extrabold text-rose-400">September 2026</span>
             </div>
 
-            <div id="statsContainer" class="grid grid-cols-2 gap-3">
-                <!-- User stat boxes injected dynamically -->
-            </div>
+            <div id="statsContainer" class="grid grid-cols-2 gap-3"></div>
         </section>
 
-        <!-- Ludo Board Canvas -->
         <section class="bg-slate-900 border border-slate-800 rounded-3xl p-3 sm:p-5 shadow-2xl relative overflow-hidden">
-            
             <div class="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-800">
                 <div class="flex items-center gap-2">
-                    <button onclick="navigateMonth(-1)" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs transition"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button onclick="navigateMonth(-1)" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center text-xs"><i class="fa-solid fa-chevron-left"></i></button>
                     <span id="monthYearTitle" class="font-extrabold text-sm sm:text-base text-white px-2">September 2026</span>
-                    <button onclick="navigateMonth(1)" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-xs transition"><i class="fa-solid fa-chevron-right"></i></button>
+                    <button onclick="navigateMonth(1)" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center text-xs"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
 
-                <button onclick="jumpToToday()" class="bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 text-xs font-bold px-3 py-2 rounded-xl transition">Jump to Today</button>
+                <button onclick="jumpToToday()" class="bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold px-3 py-2 rounded-xl">Jump to Today</button>
             </div>
 
-            <!-- Day Headers -->
             <div class="calendar-grid gap-1 sm:gap-2 text-center mb-2">
                 <div class="text-[10px] font-black text-rose-500 uppercase tracking-wider py-1">Sun</div>
                 <div class="text-[10px] font-black text-slate-500 uppercase tracking-wider py-1">Mon</div>
@@ -128,12 +121,11 @@
                 <div class="text-[10px] font-black text-emerald-500 uppercase tracking-wider py-1">Sat</div>
             </div>
 
-            <!-- Grid -->
             <div id="calendarGrid" class="calendar-grid gap-1.5 sm:gap-2"></div>
         </section>
     </main>
 
-    <!-- Chatbot Assistant Popup -->
+    <!-- Chatbot Assistant Widget -->
     <div class="fixed bottom-3 left-0 right-0 max-w-lg mx-auto px-4 z-40 pointer-events-none">
         <div id="chatbotCard" class="bg-slate-900/95 border border-slate-700/80 backdrop-blur-xl p-3.5 rounded-2xl shadow-2xl flex items-start gap-3 pointer-events-auto chat-pop">
             <div id="botAvatar" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-xl shadow-md flex-shrink-0 animate-bounce">
@@ -142,20 +134,21 @@
             <div class="flex-grow min-w-0">
                 <div class="flex items-center justify-between">
                     <span class="text-[11px] font-extrabold uppercase tracking-wider text-rose-400">Ludo Bot Assistant</span>
-                    <span id="botMood" class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-bold">Live Synced! ⚡</span>
+                    <span id="botMood" class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-bold">Synced! ⚡</span>
                 </div>
                 <p id="botSpeech" class="text-xs text-slate-200 font-semibold mt-1 leading-snug">
-                    Both pointers are visible live on the track! Tap any date to advance your pawn.
+                    Case-sensitivity fixed! Both Aro and Kavi sync automatically on the board.
                 </p>
             </div>
         </div>
     </div>
 
     <script>
+        // REPLACE WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyT-WY8onYoUHI-kQMWtIFGBuaotdBYzWYvG7FHBpkUhRh7eCduTAzfhVrIvgeAMdaG/exec";
 
         let state = {
-            currentUser: localStorage.getItem('ludo_app_user') || 'Aro',
+            currentUser: (localStorage.getItem('ludo_app_user') || 'Aro').trim(),
             currentColor: localStorage.getItem('ludo_app_color') || 'red',
             allAttendance: {},
             userProfiles: {},
@@ -166,8 +159,8 @@
         const colorClasses = {
             red: { text: 'text-red-500', bg: 'bg-red-500/20', border: 'border-red-500/40', emoji: '🔴' },
             blue: { text: 'text-blue-500', bg: 'bg-blue-500/20', border: 'border-blue-500/40', emoji: '🔵' },
-            emerald: { text: 'text-emerald-500', bg: 'bg-emerald-500/20', border: 'border-emerald-500/40', emoji: '🟢' },
             purple: { text: 'text-purple-500', bg: 'bg-purple-500/20', border: 'border-purple-500/40', emoji: '🟣' },
+            emerald: { text: 'text-emerald-500', bg: 'bg-emerald-500/20', border: 'border-emerald-500/40', emoji: '🟢' },
             amber: { text: 'text-amber-500', bg: 'bg-amber-500/20', border: 'border-amber-500/40', emoji: '🟠' },
             pink: { text: 'text-pink-500', bg: 'bg-pink-500/20', border: 'border-pink-500/40', emoji: '🩷' }
         };
@@ -180,9 +173,6 @@
         const playerAvatar = document.getElementById('playerAvatar');
         const statsContainer = document.getElementById('statsContainer');
         const currentMonthLabel = document.getElementById('currentMonthLabel');
-        const botSpeech = document.getElementById('botSpeech');
-        const botMood = document.getElementById('botMood');
-        const botAvatar = document.getElementById('botAvatar');
 
         function openSettingsModal() {
             inputUsername.value = state.currentUser;
@@ -211,7 +201,6 @@
                 updateHeaderUI();
                 settingsModal.classList.add('hidden');
                 fetchAllData();
-                triggerBotTalk('customized');
             }
         }
 
@@ -249,7 +238,7 @@
                         status: isPresent ? "PRESENT" : "ABSENT"
                     })
                 });
-                setTimeout(fetchAllData, 800);
+                setTimeout(fetchAllData, 600);
             } catch(e) {}
         }
 
@@ -282,37 +271,44 @@
             const today = new Date();
             const isCurrentMonthView = (today.getFullYear() === year && today.getMonth() === month);
 
-            // Calculate Stats for All Players (Month vs Overall)
+            // Always ensure both Aro and Kavi exist as players
+            let playersSet = new Set(['aro', 'kavi']);
+            Object.keys(state.allAttendance).forEach(u => playersSet.add(u.toLowerCase()));
+            Object.keys(state.userProfiles).forEach(u => playersSet.add(u.toLowerCase()));
+            let players = Array.from(playersSet);
+
             let monthStats = {};
             let overallStats = {};
-
-            // Ensure Aro and Kavi are initialized in profiles
-            let players = Array.from(new Set(['Aro', 'Kavi', ...Object.keys(state.allAttendance), ...Object.keys(state.userProfiles)]));
 
             players.forEach(p => {
                 monthStats[p] = 0;
                 overallStats[p] = 0;
             });
 
-            for (let user in state.allAttendance) {
-                const userDates = state.allAttendance[user] || {};
+            // Parse case-insensitive attendance records
+            for (let uKey in state.allAttendance) {
+                const cleanU = uKey.toLowerCase();
+                const userDates = state.allAttendance[uKey] || {};
+                
                 for (let dateKey in userDates) {
                     if (userDates[dateKey]) {
-                        overallStats[user] = (overallStats[user] || 0) + 1;
+                        overallStats[cleanU] = (overallStats[cleanU] || 0) + 1;
                         
-                        // Check if in current viewing month
                         const [y, m] = dateKey.split('-').map(Number);
                         if (y === year && (m - 1) === month) {
-                            monthStats[user] = (monthStats[user] || 0) + 1;
+                            monthStats[cleanU] = (monthStats[cleanU] || 0) + 1;
                         }
                     }
                 }
             }
 
-            // Render Stats UI
+            // Render Attendance Standings Cards
             statsContainer.innerHTML = '';
             players.forEach(p => {
-                let colorKey = (p === state.currentUser) ? state.currentColor : (state.userProfiles[p]?.color || (p.toLowerCase() === 'kavi' ? 'blue' : 'red'));
+                const displayName = p.charAt(0).toUpperCase() + p.slice(1);
+                const isMe = p === state.currentUser.toLowerCase();
+                
+                let colorKey = isMe ? state.currentColor : (state.userProfiles[p]?.color || (p === 'aro' ? 'red' : 'purple'));
                 let conf = colorClasses[colorKey] || colorClasses.red;
 
                 let card = document.createElement('div');
@@ -321,7 +317,10 @@
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-chess-pawn ${conf.text} text-xl"></i>
                         <div>
-                            <p class="font-black text-xs text-white">${p} ${p === state.currentUser ? '<span class="text-[9px] bg-slate-800 text-slate-400 px-1 rounded">(You)</span>' : ''}</p>
+                            <p class="font-black text-xs text-white flex items-center gap-1">
+                                <span>${displayName}</span>
+                                ${isMe ? '<span class="text-[9px] bg-slate-800 text-slate-400 px-1 rounded">(You)</span>' : ''}
+                            </p>
                             <p class="text-[10px] text-slate-400">Month: <strong class="text-emerald-400">${monthStats[p] || 0} days</strong></p>
                         </div>
                     </div>
@@ -333,22 +332,24 @@
                 statsContainer.appendChild(card);
             });
 
-            // Empty slots before day 1
+            // Empty Calendar Cells
             for (let i = 0; i < firstDayIndex; i++) {
                 const emptyCell = document.createElement('div');
                 emptyCell.className = 'min-h-[64px] sm:min-h-[76px] bg-slate-950/50 border border-slate-900 rounded-2xl opacity-20 pointer-events-none';
                 calendarGrid.appendChild(emptyCell);
             }
 
-            // Render Date Tiles
+            // Calendar Tile Days
             for (let day = 1; day <= totalDaysInMonth; day++) {
                 const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                
                 let presentUsersOnTile = [];
 
-                for (let user in state.allAttendance) {
-                    if (state.allAttendance[user][dateKey]) {
-                        presentUsersOnTile.push(user);
+                for (let uKey in state.allAttendance) {
+                    if (state.allAttendance[uKey][dateKey]) {
+                        const cleanU = uKey.toLowerCase();
+                        if (!presentUsersOnTile.includes(cleanU)) {
+                            presentUsersOnTile.push(cleanU);
+                        }
                     }
                 }
 
@@ -360,13 +361,13 @@
                 }`;
 
                 let pawnsHTML = '';
-
                 if (presentUsersOnTile.length > 0) {
                     pawnsHTML = `<div class="flex items-center justify-center gap-1 bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-700 shadow-lg pawn-anim">`;
-                    presentUsersOnTile.forEach(u => {
-                        let cKey = (u === state.currentUser) ? state.currentColor : (state.userProfiles[u]?.color || (u.toLowerCase() === 'kavi' ? 'blue' : 'red'));
+                    presentUsersOnTile.forEach(p => {
+                        let isMe = p === state.currentUser.toLowerCase();
+                        let cKey = isMe ? state.currentColor : (state.userProfiles[p]?.color || (p === 'aro' ? 'red' : 'purple'));
                         let conf = colorClasses[cKey] || colorClasses.red;
-                        pawnsHTML += `<i class="fa-solid fa-chess-pawn ${conf.text} text-lg sm:text-xl" title="${u}"></i>`;
+                        pawnsHTML += `<i class="fa-solid fa-chess-pawn ${conf.text} text-lg sm:text-xl" title="${p}"></i>`;
                     });
                     pawnsHTML += `</div>`;
                 } else {
@@ -382,21 +383,19 @@
                 `;
 
                 tile.addEventListener('click', () => {
-                    const userRecords = state.allAttendance[state.currentUser] || {};
-                    const currentlyPresent = !!userRecords[dateKey];
-                    
-                    if (!state.allAttendance[state.currentUser]) {
-                        state.allAttendance[state.currentUser] = {};
+                    const cleanUser = state.currentUser.toLowerCase();
+                    if (!state.allAttendance[cleanUser]) {
+                        state.allAttendance[cleanUser] = {};
                     }
 
+                    const currentlyPresent = !!state.allAttendance[cleanUser][dateKey];
+
                     if (currentlyPresent) {
-                        delete state.allAttendance[state.currentUser][dateKey];
+                        delete state.allAttendance[cleanUser][dateKey];
                         saveAttendance(dateKey, false);
-                        triggerBotTalk('absent', day);
                     } else {
-                        state.allAttendance[state.currentUser][dateKey] = true;
+                        state.allAttendance[cleanUser][dateKey] = true;
                         saveAttendance(dateKey, true);
-                        triggerBotTalk('present', day);
                     }
 
                     renderBoard();
@@ -404,44 +403,6 @@
 
                 calendarGrid.appendChild(tile);
             }
-        }
-
-        function triggerBotTalk(event, day) {
-            let msg = "";
-            let mood = "Happy! 😀";
-            let avatar = "🤖";
-
-            if (event === 'present') {
-                const reactions = [
-                    `WOAH! ${state.currentUser} stepped onto Day ${day}! Moving forward on the board! 🎲🔥`,
-                    `YES! ${state.currentUser} marked present for Day ${day}! Everyone can see your pawn advancing! 🚀`,
-                    `BOOM! Day ${day} claimed! Your Ludo piece is making moves! 👑`
-                ];
-                msg = reactions[Math.floor(Math.random() * reactions.length)];
-                mood = "Hyped! 🔥";
-                avatar = "💥";
-            } else if (event === 'absent') {
-                const reactions = [
-                    `OH NO! ${state.currentUser} stepped back from Day ${day}... Don't give up ground! 😱`,
-                    `WAIT! Stepping back on Day ${day}? The pawn retreated! 🙈`
-                ];
-                msg = reactions[Math.floor(Math.random() * reactions.length)];
-                mood = "Shocked! 😲";
-                avatar = "😱";
-            } else if (event === 'customized') {
-                msg = `${state.currentUser} updated their player piece! Looking awesome! 🎨`;
-                mood = "Stylish! ✨";
-                avatar = "😎";
-            }
-
-            botSpeech.innerText = msg;
-            botMood.innerText = mood;
-            botAvatar.innerText = avatar;
-
-            const card = document.getElementById('chatbotCard');
-            card.classList.remove('chat-pop');
-            void card.offsetWidth;
-            card.classList.add('chat-pop');
         }
 
         window.onload = function() {
@@ -452,8 +413,7 @@
                 fetchAllData();
             }
 
-            // Auto-refresh board every 5 seconds for live visibility
-            setInterval(fetchAllData, 5000);
+            setInterval(fetchAllData, 4000);
         };
     </script>
 </body>
