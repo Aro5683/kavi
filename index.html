@@ -35,13 +35,11 @@
             touch-action: manipulation;
         }
         
-        /* Fixed 7-column calendar layout with adaptive touch dimensions */
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, minmax(0, 1fr));
         }
 
-        /* Responsive minimum touch-target guarantees for mobile screens */
         .day-card {
             transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease, border-color 0.15s ease;
             min-height: 52px;
@@ -57,7 +55,6 @@
             transform: scale(0.92);
         }
 
-        /* Smooth Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -130,15 +127,13 @@
                 </div>
             </div>
 
-            <!-- Right Controls: Storage Badge & Clock -->
+            <!-- Controls: Storage Badge & Clock -->
             <div class="flex items-center gap-2 flex-shrink-0">
-                <!-- OPFS Storage Indicator -->
-                <div id="storageBadge" class="hidden md:flex items-center gap-1.5 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-full text-[11px] font-medium text-slate-600" title="Data Persistence Engine">
+                <div id="storageBadge" class="hidden md:flex items-center gap-1.5 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-full text-[11px] font-medium text-slate-600" title="Cloud Sync">
                     <span id="storageIcon" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span id="storageText">OPFS Sync</span>
+                    <span id="storageText">Google Sheets Sync</span>
                 </div>
 
-                <!-- Clock / Date Pill -->
                 <div id="currentDateDisplay" class="bg-slate-50 border border-slate-200/90 text-slate-700 text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-200">
                     <i class="fa-regular fa-calendar-days text-emerald-600 text-xs"></i>
                     <span id="clockText" class="text-[11px] sm:text-xs">--</span>
@@ -153,17 +148,13 @@
         <!-- Main Calendar Card -->
         <section class="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-sm">
             
-            <!-- Calendar Navigation Header -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-slate-100">
-                
-                <!-- Month & Year Selectors with Step Buttons -->
                 <div class="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-3 w-full sm:w-auto">
                     <button id="prevMonthBtn" onclick="navigateMonth(-1)" class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/90 text-slate-700 flex items-center justify-center transition active:scale-95 flex-shrink-0" title="Previous Month">
                         <i class="fa-solid fa-chevron-left text-xs sm:text-sm"></i>
                     </button>
 
                     <div class="flex items-center gap-1.5 flex-grow justify-center sm:flex-grow-0">
-                        <!-- Month Select -->
                         <select id="monthSelect" onchange="onDateSelectorChange()" class="bg-slate-50 border border-slate-200/90 text-slate-900 text-sm sm:text-base font-extrabold rounded-xl px-2.5 py-2 sm:px-3 sm:py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
                             <option value="0">January</option>
                             <option value="1">February</option>
@@ -179,9 +170,7 @@
                             <option value="11">December</option>
                         </select>
 
-                        <!-- Year Select -->
                         <select id="yearSelect" onchange="onDateSelectorChange()" class="bg-slate-50 border border-slate-200/90 text-slate-900 text-sm sm:text-base font-extrabold rounded-xl px-2.5 py-2 sm:px-3 sm:py-2 outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer">
-                            <!-- Populated via JS -->
                         </select>
                     </div>
 
@@ -190,7 +179,6 @@
                     </button>
                 </div>
 
-                <!-- Quick Action Buttons -->
                 <div class="flex items-center justify-end gap-2 w-full sm:w-auto pt-1 sm:pt-0">
                     <button onclick="jumpToToday()" class="flex-1 sm:flex-none bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/90 text-xs font-bold px-3.5 py-2.5 rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5">
                         <i class="fa-solid fa-bullseye text-xs"></i>
@@ -204,7 +192,6 @@
                 </div>
             </div>
 
-            <!-- Days of Week Banner -->
             <div class="calendar-grid gap-1 sm:gap-2 text-center mb-2">
                 <div class="text-[10px] sm:text-xs font-extrabold text-rose-500 py-1 uppercase tracking-wider">Sun</div>
                 <div class="text-[10px] sm:text-xs font-extrabold text-slate-400 py-1 uppercase tracking-wider">Mon</div>
@@ -215,21 +202,19 @@
                 <div class="text-[10px] sm:text-xs font-extrabold text-emerald-600 py-1 uppercase tracking-wider">Sat</div>
             </div>
 
-            <!-- Dynamic Calendar Dates Grid -->
             <div id="calendarGrid" class="calendar-grid gap-1 sm:gap-2">
-                <!-- Date Cells generated via JavaScript -->
             </div>
 
-            <!-- Mobile Touch Guide / Legend -->
+            <!-- Legend with Location Pin Indicator -->
             <div class="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-[11px] sm:text-xs text-slate-500">
                 <div class="flex items-center gap-3 flex-wrap">
                     <div class="flex items-center gap-1.5">
-                        <span class="w-3.5 h-3.5 rounded bg-emerald-500 border border-emerald-600 flex items-center justify-center text-[9px] text-white"><i class="fa-solid fa-check"></i></span>
-                        <span class="font-semibold text-slate-700">Present (Click date)</span>
+                        <span class="w-3.5 h-3.5 rounded bg-emerald-500 border border-emerald-600 flex items-center justify-center text-[9px] text-white"><i class="fa-solid fa-location-dot"></i></span>
+                        <span class="font-semibold text-slate-700">Present (Location Active)</span>
                     </div>
                     <div class="flex items-center gap-1.5">
                         <span class="w-3.5 h-3.5 rounded bg-slate-50 border border-slate-200"></span>
-                        <span class="font-semibold text-slate-700">Unmarked (Click again to reset)</span>
+                        <span class="font-semibold text-slate-700">Unmarked</span>
                     </div>
                 </div>
 
@@ -239,9 +224,8 @@
             </div>
         </section>
 
-        <!-- Clean Attendance Summary Cards -->
+        <!-- Stats Section -->
         <section class="grid grid-cols-2 gap-3 sm:gap-4">
-            <!-- Current Month Present Card -->
             <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
                 <div>
                     <span class="text-[10px] sm:text-xs font-extrabold text-slate-400 uppercase tracking-wider block mb-0.5 sm:mb-1">This Month Present</span>
@@ -255,7 +239,6 @@
                 </div>
             </div>
 
-            <!-- Overall Present Card -->
             <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm">
                 <div>
                     <span class="text-[10px] sm:text-xs font-extrabold text-slate-400 uppercase tracking-wider block mb-0.5 sm:mb-1">Overall Days Present</span>
@@ -271,43 +254,30 @@
         </section>
     </main>
 
-    <!-- Toast Notification Overlay -->
+    <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 bg-slate-900/95 text-white px-4 py-2.5 sm:py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 transition-all duration-300 transform translate-y-16 opacity-0 pointer-events-none z-50 text-xs sm:text-sm font-semibold max-w-[90vw] whitespace-nowrap">
         <div id="toastIcon" class="text-emerald-400 text-base"><i class="fa-solid fa-circle-check"></i></div>
         <span id="toastMsg" class="truncate">Notification message</span>
     </div>
 
-    <!-- App Footer -->
     <footer class="bg-white border-t border-slate-200/80 py-3.5 text-center text-[11px] text-slate-500 mt-2">
         <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-1">
-            <p>Smart Attendance WebApp &bull; Mobile-First & OPFS Storage</p>
-            <p id="storageEngineDetail" class="text-slate-400">Storage Engine: Initializing...</p>
+            <p>Smart Attendance WebApp &bull; Cloud Powered by Google Sheets</p>
+            <p id="storageEngineDetail" class="text-slate-400">Google Sheets API Connected</p>
         </div>
     </footer>
 
     <script>
-        /**
-         * Core Application State
-         */
+        // GOOGLE APPS SCRIPT WEB APP URL INTEGRATED:
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyT-WY8onYoUHI-kQMWtIFGBuaotdBYzWYvG7FHBpkUhRh7eCduTAzfhVrIvgeAMdaG/exec";
+
         let state = {
-            user: {
-                name: ''
-            },
-            // Date string keys "YYYY-MM-DD": true (Present)
+            user: { name: localStorage.getItem('attendance_app_user') || '' },
             attendance: {}, 
             currentViewYear: new Date().getFullYear(),
-            currentViewMonth: new Date().getMonth(),
-            storageType: 'none' // 'opfs' | 'localstorage'
+            currentViewMonth: new Date().getMonth()
         };
 
-        const monthNames = [
-            "January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
-        ];
-
-        const FILE_NAME = "attendance_data_v2.json";
-
-        // DOM Element Cache
         const nameModal = document.getElementById('nameModal');
         const editNameModal = document.getElementById('editNameModal');
         const usernameInput = document.getElementById('usernameInput');
@@ -322,106 +292,65 @@
         const statMonthPresent = document.getElementById('statMonthPresent');
         const statMonthTotal = document.getElementById('statMonthTotal');
         const statOverallPresent = document.getElementById('statOverallPresent');
-        
-        const storageBadge = document.getElementById('storageBadge');
-        const storageIcon = document.getElementById('storageIcon');
-        const storageText = document.getElementById('storageText');
-        const storageEngineDetail = document.getElementById('storageEngineDetail');
         const clockText = document.getElementById('clockText');
 
-        /**
-         * Storage Engine: OPFS with LocalStorage Fallback
-         */
-        async function initStorageAndLoadData() {
-            let loaded = false;
-
-            // Try OPFS First
-            if (navigator.storage && navigator.storage.getDirectory) {
-                try {
-                    const root = await navigator.storage.getDirectory();
-                    const fileHandle = await root.getFileHandle(FILE_NAME, { create: true });
-                    const file = await fileHandle.getFile();
-                    const text = await file.text();
-
-                    if (text && text.trim() !== "") {
-                        const parsed = JSON.parse(text);
-                        if (parsed.user) state.user = parsed.user;
-                        if (parsed.attendance) state.attendance = parsed.attendance;
-                    }
-
-                    state.storageType = 'opfs';
-                    setStorageBadge('OPFS Sync', 'bg-emerald-500', 'Origin Private File System active');
-                    loaded = true;
-                } catch (err) {
-                    console.warn("OPFS error, falling back to LocalStorage:", err);
+        async function fetchUserDataFromSheets() {
+            if (!state.user.name || !GOOGLE_SCRIPT_URL) return;
+            showToast("Syncing with cloud...", "info");
+            
+            try {
+                const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getData&user=${encodeURIComponent(state.user.name)}`);
+                const data = await response.json();
+                if (data.status === "success") {
+                    state.attendance = data.attendance || {};
+                    renderCalendar();
+                    showToast("Cloud sync complete!", "success");
                 }
+            } catch (err) {
+                console.error("Cloud fetch failed:", err);
+                showToast("Offline or fetch failed", "info");
             }
-
-            // LocalStorage Fallback
-            if (!loaded) {
-                try {
-                    const localData = localStorage.getItem('attendance_app_light_data');
-                    if (localData) {
-                        const parsed = JSON.parse(localData);
-                        if (parsed.user) state.user = parsed.user;
-                        if (parsed.attendance) state.attendance = parsed.attendance;
-                    }
-                    state.storageType = 'localstorage';
-                    setStorageBadge('LocalStorage', 'bg-amber-500', 'Saved locally in browser storage');
-                } catch (e) {
-                    console.error("Storage initialization error:", e);
-                    state.storageType = 'none';
-                    setStorageBadge('Memory Only', 'bg-rose-500', 'Data will reset on page refresh');
-                }
-            }
-
-            // Onboarding Check
-            if (!state.user.name || state.user.name.trim() === '') {
-                showNameModal();
-            } else {
-                updateUserUI();
-            }
-
-            initYearSelect();
-            updateDateSelectors();
-            renderCalendar();
         }
 
-        async function saveData() {
-            const dataToSave = JSON.stringify({
-                user: state.user,
-                attendance: state.attendance,
-                lastSaved: new Date().toISOString()
-            });
-
-            if (state.storageType === 'opfs') {
-                try {
-                    const root = await navigator.storage.getDirectory();
-                    const fileHandle = await root.getFileHandle(FILE_NAME, { create: true });
-                    const writable = await fileHandle.createWritable();
-                    await writable.write(dataToSave);
-                    await writable.close();
-                } catch (err) {
-                    console.error("OPFS Save Failed, using LocalStorage fallback:", err);
-                    localStorage.setItem('attendance_app_light_data', dataToSave);
-                }
-            } else {
-                localStorage.setItem('attendance_app_light_data', dataToSave);
+        async function syncSingleAttendanceToSheets(dateKey, isPresent) {
+            if (!GOOGLE_SCRIPT_URL) return;
+            
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: "saveAttendance",
+                        user: state.user.name,
+                        dateKey: dateKey,
+                        status: isPresent ? "PRESENT" : "ABSENT"
+                    })
+                });
+            } catch (err) {
+                console.error("Cloud post failed:", err);
             }
-
-            updateMetrics();
         }
 
-        function setStorageBadge(label, dotClass, detailText) {
-            storageBadge.classList.remove('hidden');
-            storageText.innerText = label;
-            storageIcon.className = `w-2 h-2 rounded-full ${dotClass} animate-pulse`;
-            storageEngineDetail.innerText = `Storage Engine: ${detailText}`;
+        async function syncClearMonthToSheets(prefix) {
+            if (!GOOGLE_SCRIPT_URL) return;
+            
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: "clearMonth",
+                        user: state.user.name,
+                        prefix: prefix
+                    })
+                });
+            } catch (err) {
+                console.error("Clear month sync failed:", err);
+            }
         }
 
-        /**
-         * User Name & Profile Management
-         */
         function showNameModal() {
             nameModal.classList.remove('hidden');
             setTimeout(() => usernameInput.focus(), 150);
@@ -432,10 +361,10 @@
             const val = usernameInput.value.trim();
             if (val) {
                 state.user.name = val;
-                saveData();
+                localStorage.setItem('attendance_app_user', val);
                 updateUserUI();
                 nameModal.classList.add('hidden');
-                showToast(`Welcome, ${val}!`, 'success');
+                fetchUserDataFromSheets();
             }
         }
 
@@ -453,10 +382,10 @@
             const val = editUsernameInput.value.trim();
             if (val) {
                 state.user.name = val;
-                saveData();
+                localStorage.setItem('attendance_app_user', val);
                 updateUserUI();
                 closeEditNameModal();
-                showToast('Name updated successfully!', 'success');
+                fetchUserDataFromSheets();
             }
         }
 
@@ -467,9 +396,6 @@
             }
         }
 
-        /**
-         * Calendar Navigation
-         */
         function initYearSelect() {
             yearSelect.innerHTML = '';
             const currentYear = new Date().getFullYear();
@@ -514,9 +440,6 @@
             showToast('Jumped to current month', 'info');
         }
 
-        /**
-         * Render Calendar Grid Cells
-         */
         function renderCalendar() {
             calendarGrid.innerHTML = '';
 
@@ -530,14 +453,12 @@
             const isCurrentMonthView = (today.getFullYear() === year && today.getMonth() === month);
             const todayDateNum = today.getDate();
 
-            // Render Blank Cells before month start
             for (let i = 0; i < firstDayIndex; i++) {
                 const emptyCell = document.createElement('div');
                 emptyCell.className = 'day-card rounded-xl sm:rounded-2xl bg-slate-50/50 border border-slate-100 pointer-events-none opacity-40';
                 calendarGrid.appendChild(emptyCell);
             }
 
-            // Render Month Days
             for (let day = 1; day <= totalDaysInMonth; day++) {
                 const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const isPresent = !!state.attendance[dateKey];
@@ -559,8 +480,9 @@
 
                 card.className = classes;
 
+                // LOCATION POINTER ICON ON PRESENT DAYS
                 let iconHTML = isPresent 
-                    ? `<span class="text-[10px] sm:text-xs bg-white/20 px-1 sm:px-1.5 py-0.5 rounded-md"><i class="fa-solid fa-check"></i></span>`
+                    ? `<span class="text-[11px] sm:text-xs bg-white/20 px-1.5 py-0.5 rounded-md text-white shadow-sm flex items-center justify-center"><i class="fa-solid fa-location-dot animate-bounce"></i></span>`
                     : `<span class="text-[9px] sm:text-[10px] text-slate-300 font-normal">--</span>`;
 
                 let todayBadge = isToday 
@@ -573,7 +495,6 @@
                     <div class="mt-0.5 sm:mt-0">${iconHTML}</div>
                 `;
 
-                // Toggle logic: Click to mark present (green), click again to reset/unmark
                 card.addEventListener('click', () => {
                     toggleAttendance(dateKey, day);
                 });
@@ -584,19 +505,18 @@
             updateMetrics();
         }
 
-        /**
-         * Toggle Attendance State (Unmarked <-> Present)
-         */
         function toggleAttendance(dateKey, dayNumber) {
+            let newState = false;
             if (state.attendance[dateKey]) {
                 delete state.attendance[dateKey];
-                showToast(`Day ${dayNumber}: Reset to Unmarked`, 'info');
+                showToast(`Day ${dayNumber}: Unmarked`, 'info');
             } else {
                 state.attendance[dateKey] = true;
+                newState = true;
                 showToast(`Day ${dayNumber}: Marked Present`, 'present');
             }
 
-            saveData();
+            syncSingleAttendanceToSheets(dateKey, newState);
             renderCalendar();
         }
 
@@ -614,7 +534,7 @@
             }
 
             if (count > 0) {
-                saveData();
+                syncClearMonthToSheets(prefix);
                 renderCalendar();
                 showToast(`Cleared ${count} entries for this month`, 'info');
             } else {
@@ -622,9 +542,6 @@
             }
         }
 
-        /**
-         * Attendance Summary Statistics (Counts Only)
-         */
         function updateMetrics() {
             const year = state.currentViewYear;
             const month = state.currentViewMonth;
@@ -648,9 +565,6 @@
             statOverallPresent.innerText = overallPresent;
         }
 
-        /**
-         * Toast Helper
-         */
         let toastTimeout;
         function showToast(message, type = 'info') {
             const toast = document.getElementById('toast');
@@ -661,10 +575,10 @@
 
             if (type === 'present') {
                 toastIcon.className = 'text-emerald-400 text-base';
-                toastIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                toastIcon.innerHTML = '<i class="fa-solid fa-location-dot"></i>';
             } else if (type === 'success') {
                 toastIcon.className = 'text-emerald-400 text-base';
-                toastIcon.innerHTML = '<i class="fa-solid fa-sparkles"></i>';
+                toastIcon.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i>';
             } else {
                 toastIcon.className = 'text-slate-400 text-base';
                 toastIcon.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
@@ -678,9 +592,6 @@
             }, 2200);
         }
 
-        /**
-         * Live Date Display
-         */
         function startLiveClock() {
             function update() {
                 const now = new Date();
@@ -694,10 +605,17 @@
             setInterval(update, 10000);
         }
 
-        // Initialize App
         window.onload = function() {
             startLiveClock();
-            initStorageAndLoadData();
+            initYearSelect();
+            updateDateSelectors();
+            
+            if (!state.user.name) {
+                showNameModal();
+            } else {
+                updateUserUI();
+                fetchUserDataFromSheets();
+            }
         };
     </script>
 </body>
