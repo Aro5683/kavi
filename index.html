@@ -3,124 +3,357 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Realtime 3D Attendance Tracker</title>
+  <title>Real-Time 3D Attendance Tracker</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
+      --bg: #0b0f19;
+      --card-bg: #151c2c;
       --accent: #6366f1;
+      --accent-hover: #4f46e5;
       --text: #f8fafc;
       --muted: #94a3b8;
+      --border: #232d42;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px; }
     
-    .container { max-width: 1000px; margin: 0 auto; }
-    
-    /* Setup Modal */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-    .card { background: var(--card-bg); padding: 30px; border-radius: 16px; border: 1px solid #334155; width: 100%; max-width: 480px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
-    
-    input[type="text"], select { width: 100%; padding: 12px; margin: 10px 0 20px; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 8px; font-size: 1rem; }
-    button { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-    button:hover { opacity: 0.9; transform: translateY(-1px); }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
 
-    /* 3D Color Pointer Grid */
-    .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 15px 0 25px; }
-    .color-option { position: relative; height: 70px; background: #0f172a; border-radius: 10px; border: 2px solid transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .color-option.selected { border-color: var(--accent); background: #1e1b4b; }
-    
-    /* 3D Pointer Icon */
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1050px;
+      margin: 0 auto;
+    }
+
+    /* Modals & Overlays */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      padding: 32px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+
+    h2 { font-size: 1.5rem; margin-bottom: 8px; font-weight: 700; }
+    p.subtext { color: var(--muted); font-size: 0.875rem; margin-bottom: 20px; line-height: 1.4; }
+
+    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--muted); }
+
+    input[type="text"], input[type="url"], select {
+      width: 100%;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      background: #0b0f19;
+      border: 1px solid var(--border);
+      color: #fff;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus { border-color: var(--accent); }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    button:hover { background: var(--accent-hover); }
+    button:active { transform: scale(0.98); }
+
+    /* 3D Color Pointer Grid Selection */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .color-option {
+      position: relative;
+      height: 75px;
+      background: #0b0f19;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s ease;
+    }
+
+    .color-option:hover { border-color: #475569; }
+    .color-option.selected { border-color: var(--accent); background: rgba(99, 102, 241, 0.1); }
+
+    /* 3D Location Pointer Icon Engine */
     .pointer-3d {
-      width: 24px; height: 24px;
+      width: 22px;
+      height: 22px;
       border-radius: 50% 50% 50% 0;
       transform: rotate(-45deg);
-      box-shadow: -2px 4px 8px rgba(0,0,0,0.4), inset -2px -2px 4px rgba(0,0,0,0.3), inset 2px 2px 4px rgba(255,255,255,0.4);
+      box-shadow: -3px 5px 10px rgba(0,0,0,0.5), inset -2px -2px 4px rgba(0,0,0,0.4), inset 2px 2px 4px rgba(255,255,255,0.5);
+      position: relative;
+      z-index: 2;
     }
-    .c-red { background: linear-gradient(135deg, #ef4444, #991b1b); }
-    .c-blue { background: linear-gradient(135deg, #3b82f6, #1e40af); }
-    .c-green { background: linear-gradient(135deg, #10b981, #065f46); }
-    .c-yellow { background: linear-gradient(135deg, #f59e0b, #78350f); }
-    .c-purple { background: linear-gradient(135deg, #a855f7, #581c87); }
-    .c-orange { background: linear-gradient(135deg, #f97316, #9a3412); }
 
-    /* Main Dashboard */
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
-    .user-stats { display: flex; gap: 15px; }
-    .stat-badge { background: var(--card-bg); padding: 10px 16px; border-radius: 10px; border: 1px solid #334155; font-size: 0.9rem; }
-    
-    /* Calendar */
-    .calendar-card { background: var(--card-bg); border-radius: 16px; border: 1px solid #334155; padding: 25px; }
-    .calendar-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
-    .weekday { font-weight: 600; color: var(--muted); padding-bottom: 8px; font-size: 0.85rem; }
-    
+    .pointer-3d::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: #fff;
+      position: absolute;
+      border-radius: 50%;
+      top: 7px;
+      left: 7px;
+      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    /* 6 Selected Color Gradients */
+    .c-red { background: linear-gradient(135deg, #f87171, #dc2626); }
+    .c-blue { background: linear-gradient(135deg, #60a5fa, #2563eb); }
+    .c-green { background: linear-gradient(135deg, #34d399, #059669); }
+    .c-yellow { background: linear-gradient(135deg, #fbbf24, #d97706); }
+    .c-purple { background: linear-gradient(135deg, #c084fc, #9333ea); }
+    .c-orange { background: linear-gradient(135deg, #fb923c, #ea580c); }
+
+    /* Dashboard Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .user-greeting h1 { font-size: 1.75rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    .user-greeting p { color: var(--muted); font-size: 0.875rem; margin-top: 4px; }
+
+    .stats-container { display: flex; gap: 12px; flex-wrap: wrap; }
+    .stat-card {
+      background: var(--card-bg);
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-card strong { color: #fff; }
+
+    .btn-config {
+      width: auto;
+      background: #1e293b;
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      padding: 8px 14px;
+    }
+    .btn-config:hover { background: #334155; }
+
+    /* Main Calendar Interface */
+    .calendar-wrapper {
+      background: var(--card-bg);
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+    }
+
+    .weekday-label {
+      text-align: center;
+      font-weight: 600;
+      color: var(--muted);
+      padding-bottom: 12px;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
     .day-cell {
-      min-height: 85px; background: #0f172a; border-radius: 10px; border: 1px solid #334155; padding: 6px;
-      cursor: pointer; position: relative; transition: 0.2s; display: flex; flex-direction: column; justify-content: space-between;
-    }
-    .day-cell:hover { border-color: var(--accent); }
-    .day-cell.present { border-color: #10b981; background: #064e3b15; }
-    .day-num { font-weight: 600; font-size: 0.9rem; text-align: left; }
-
-    /* Big Pulse Wave Animation */
-    .pulse-wrapper { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-    .pulse-wave {
-      position: absolute; width: 45px; height: 45px; border-radius: 50%;
-      border: 2px solid currentColor; animation: pulse 1.8s infinite ease-out; opacity: 0;
-    }
-    @keyframes pulse {
-      0% { transform: scale(0.3); opacity: 1; }
-      100% { transform: scale(1.8); opacity: 0; }
+      min-height: 100px;
+      background: #0b0f19;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 8px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
     }
 
-    /* Multi-user Avatar Stack */
-    .users-stack { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 4px; }
-    .user-pin-indicator {
-      width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.6);
-      display: inline-block; title: attr(data-name);
-    }
+    .day-cell:hover { border-color: var(--accent); transform: translateY(-2px); }
     
-    .config-btn { width: auto; background: #334155; font-size: 0.8rem; padding: 6px 12px; }
+    .day-cell.is-present {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    .day-number { font-weight: 700; font-size: 0.85rem; color: var(--muted); }
+    .day-cell.is-present .day-number { color: #10b981; }
+
+    /* Big Pulse Wave Animation on Active Location Pointer */
+    .pointer-stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .pulse-wave-ring {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      animation: bigPulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+      opacity: 0;
+    }
+
+    @keyframes bigPulse {
+      0% { transform: scale(0.2); opacity: 1; }
+      80%, 100% { transform: scale(2.2); opacity: 0; }
+    }
+
+    /* Shared Presence Stack for Other Users */
+    .others-pointer-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+      z-index: 10;
+    }
+
+    .user-presence-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      position: relative;
+      cursor: help;
+      transition: transform 0.2s;
+    }
+
+    .user-presence-dot:hover {
+      transform: scale(1.3);
+      z-index: 20;
+    }
+
+    /* Dynamic Tooltip */
+    .user-presence-dot[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0f172a;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      white-space: nowrap;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .empty-cell {
+      visibility: hidden;
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Top Bar -->
+  <!-- Top Header Navigation -->
   <header>
-    <div>
-      <h1 id="welcomeHeader">Hey "User" 👋</h1>
-      <p style="color:var(--muted); font-size: 0.9rem;">Real-Time AppsScript Sync Active</p>
+    <div class="user-greeting">
+      <h1 id="userHeader">Hey "User" <span id="headerPointerIcon"></span></h1>
+      <p id="syncStatus">Real-time AppsScript Cloud Synchronization Active</p>
     </div>
-    <div class="user-stats">
-      <div class="stat-badge">👥 Active Users: <strong id="totalUsersCount">1</strong></div>
-      <div class="stat-badge">📅 My Presents: <strong id="myPresentsCount">0</strong></div>
-      <button class="config-btn" onclick="openConfig()">⚙ AppsScript URL</button>
+    <div class="stats-container">
+      <div class="stat-card">👥 Active Users: <strong id="totalUsers">1</strong></div>
+      <div class="stat-card">📅 My Presents: <strong id="myPresentCount">0</strong></div>
+      <button class="btn-config" onclick="openScriptUrlModal()">⚙ Setup Script URL</button>
     </div>
   </header>
 
-  <!-- Calendar Card -->
-  <div class="calendar-card">
-    <div class="calendar-controls">
-      <h2 id="monthYearLabel">Select Month</h2>
-      <input type="month" id="monthPicker" style="width: auto; margin: 0;" onchange="renderCalendar()">
+  <!-- Month Calendar View -->
+  <div class="calendar-wrapper">
+    <div class="calendar-header">
+      <h2 id="currentMonthYearText">Calendar</h2>
+      <input type="month" id="monthSelector" style="width: auto; margin-bottom: 0;" onchange="renderCalendar()">
     </div>
     <div class="calendar-grid" id="calendarGrid"></div>
   </div>
 </div>
 
-<!-- Onboarding / Registration Modal -->
+<!-- Onboarding Modal -->
 <div class="modal-overlay" id="onboardModal">
   <div class="card">
-    <h2>Register Profile</h2>
-    <p style="color:var(--muted); font-size:0.85rem; margin-top:4px;">Enter your name and pick your 3D location pointer.</p>
-    
-    <label style="display:block; margin-top:15px; font-size:0.85rem;">Your Name</label>
-    <input type="text" id="userNameInput" placeholder="e.g. Alex Rivera" />
+    <h2>Welcome!</h2>
+    <p class="subtext">Enter your name and pick a 3D location pointer color to register into the attendance system.</p>
 
-    <label style="font-size:0.85rem;">Select 3D Location Pointer Icon Color</label>
-    <div class="color-grid" id="colorPicker">
+    <label>Your Name</label>
+    <input type="text" id="inputName" placeholder="Enter full name" />
+
+    <label>Choose 3D Pointer Icon Color</label>
+    <div class="color-grid" id="colorGrid">
       <div class="color-option selected" onclick="selectColor('c-red', this)"><div class="pointer-3d c-red"></div></div>
       <div class="color-option" onclick="selectColor('c-blue', this)"><div class="pointer-3d c-blue"></div></div>
       <div class="color-option" onclick="selectColor('c-green', this)"><div class="pointer-3d c-green"></div></div>
@@ -129,167 +362,205 @@
       <div class="color-option" onclick="selectColor('c-orange', this)"><div class="pointer-3d c-orange"></div></div>
     </div>
 
-    <button onclick="completeRegistration()">Continue to Calendar</button>
+    <button onclick="saveRegistration()">Continue to Calendar</button>
+  </div>
+</div>
+
+<!-- AppsScript Web App URL Modal -->
+<div class="modal-overlay" id="scriptUrlModal" style="display: none;">
+  <div class="card">
+    <h2>Connect Google AppsScript</h2>
+    <p class="subtext">Paste your deployed Google Apps Script Web App URL below for real-time multi-user synchronization.</p>
+
+    <label>Google Apps Script Web App URL</label>
+    <input type="url" id="inputScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" />
+
+    <button onclick="saveScriptUrl()">Save & Connect</button>
+    <button style="background: transparent; border: 1px solid var(--border); margin-top: 10px;" onclick="closeScriptUrlModal()">Cancel</button>
   </div>
 </div>
 
 <script>
-  let config = {
+  // App State Management
+  let state = {
     scriptUrl: localStorage.getItem('gas_url') || '',
-    currentUser: JSON.parse(localStorage.getItem('user_profile') || 'null')
+    user: JSON.parse(localStorage.getItem('user_profile') || 'null'),
+    selectedColor: 'c-red',
+    allUsers: []
   };
 
-  let selectedColorClass = 'c-red';
-  let registeredUsers = [];
-  
-  // Set current month on init
-  const today = new Date();
-  document.getElementById('monthPicker').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+  // Set default month picker to current date
+  const now = new Date();
+  document.getElementById('monthSelector').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-  function openConfig() {
-    const url = prompt("Enter your deployed Google Apps Script Web App URL:", config.scriptUrl);
-    if (url !== null) {
-      config.scriptUrl = url.trim();
-      localStorage.setItem('gas_url', config.scriptUrl);
-      syncData();
-    }
+  function selectColor(colorClass, element) {
+    document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+    element.classList.add('selected');
+    state.selectedColor = colorClass;
   }
 
-  function selectColor(colorClass, el) {
-    document.querySelectorAll('.color-option').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedColorClass = colorClass;
-  }
+  function saveRegistration() {
+    const name = document.getElementById('inputName').value.trim();
+    if (!name) return alert('Please enter your name.');
 
-  function completeRegistration() {
-    const name = document.getElementById('userNameInput').value.trim();
-    if (!name) return alert("Please enter your name!");
-
-    config.currentUser = {
+    state.user = {
       name: name,
-      color: selectedColorClass,
+      color: state.selectedColor,
       presents: [],
       lastPointerDate: null
     };
 
-    localStorage.setItem('user_profile', JSON.stringify(config.currentUser));
+    localStorage.setItem('user_profile', JSON.stringify(state.user));
     document.getElementById('onboardModal').style.display = 'none';
-    
-    if(!config.scriptUrl) openConfig();
-    pushUserToServer();
+
+    if (!state.scriptUrl) {
+      openScriptUrlModal();
+    } else {
+      pushDataToServer();
+    }
+
     renderCalendar();
+  }
+
+  function openScriptUrlModal() {
+    document.getElementById('inputScriptUrl').value = state.scriptUrl;
+    document.getElementById('scriptUrlModal').style.display = 'flex';
+  }
+
+  function closeScriptUrlModal() {
+    document.getElementById('scriptUrlModal').style.display = 'none';
+  }
+
+  function saveScriptUrl() {
+    const url = document.getElementById('inputScriptUrl').value.trim();
+    state.scriptUrl = url;
+    localStorage.setItem('gas_url', url);
+    closeScriptUrlModal();
+    pushDataToServer();
   }
 
   function toggleAttendance(dateStr) {
-    if(!config.currentUser) return;
-    
-    let presents = config.currentUser.presents;
+    if (!state.user) return;
+
+    const presents = state.user.presents;
     const index = presents.indexOf(dateStr);
-    
+
     if (index > -1) {
       // Toggle Absent
       presents.splice(index, 1);
-      if(config.currentUser.lastPointerDate === dateStr) {
-        config.currentUser.lastPointerDate = presents[presents.length - 1] || null;
+      if (state.user.lastPointerDate === dateStr) {
+        state.user.lastPointerDate = presents[presents.length - 1] || null;
       }
     } else {
-      // Toggle Present & update location pointer date
+      // Toggle Present and set location pointer
       presents.push(dateStr);
-      config.currentUser.lastPointerDate = dateStr;
+      state.user.lastPointerDate = dateStr;
     }
-    
-    localStorage.setItem('user_profile', JSON.stringify(config.currentUser));
+
+    localStorage.setItem('user_profile', JSON.stringify(state.user));
     renderCalendar();
-    pushUserToServer();
+    pushDataToServer();
   }
 
-  async function pushUserToServer() {
-    if (!config.scriptUrl || !config.currentUser) return;
+  async function pushDataToServer() {
+    if (!state.scriptUrl || !state.user) return;
     try {
-      await fetch(config.scriptUrl, {
+      await fetch(state.scriptUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'registerOrUpdate', ...config.currentUser })
+        body: JSON.stringify({ action: 'registerOrUpdate', ...state.user })
       });
-      syncData();
-    } catch(e) { console.error("Sync error", e); }
+      fetchDataFromServer();
+    } catch (e) {
+      console.error('Server Push Error:', e);
+    }
   }
 
-  async function syncData() {
-    if (!config.scriptUrl) return;
+  async function fetchDataFromServer() {
+    if (!state.scriptUrl) return;
     try {
-      const res = await fetch(`${config.scriptUrl}?action=getUsers`);
+      const res = await fetch(`${state.scriptUrl}?action=getUsers`);
       const data = await res.json();
-      if(Array.isArray(data)) {
-        registeredUsers = data;
-        document.getElementById('totalUsersCount').innerText = registeredUsers.length || 1;
+      if (Array.isArray(data)) {
+        state.allUsers = data;
+        document.getElementById('totalUsers').innerText = state.allUsers.length;
         renderCalendar();
       }
-    } catch(e) { console.log("Fetching fallback"); }
+    } catch (e) {
+      console.error('Server Sync Fetch Error:', e);
+    }
   }
 
   function renderCalendar() {
-    if (!config.currentUser) return;
+    if (!state.user) return;
 
-    document.getElementById('welcomeHeader').innerHTML = `Hey <strong>${config.currentUser.name}</strong> 👋`;
-    document.getElementById('myPresentsCount').innerText = config.currentUser.presents.length;
+    // Update Header Text & Icon
+    document.getElementById('userHeader').innerHTML = `Hey "<strong>${state.user.name}</strong>" <div class="pointer-3d ${state.user.color}" style="display:inline-block; transform: scale(0.8) rotate(-45deg);"></div>`;
+    document.getElementById('myPresentCount').innerText = state.user.presents.length;
 
-    const [year, month] = document.getElementById('monthPicker').value.split('-').map(Number);
-    const firstDay = new Date(year, month - 1, 1).getDay();
-    const daysInMonth = new Date(year, month, 0).getDate();
+    const [year, month] = document.getElementById('monthSelector').value.split('-').map(Number);
+    const firstDayIndex = new Date(year, month - 1, 1).getDay();
+    const totalDaysInMonth = new Date(year, month, 0).getDate();
+
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    document.getElementById('currentMonthYearText').innerText = `${monthNames[month - 1]} ${year}`;
 
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = '';
 
+    // Render Weekday Labels
     const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    weekdays.forEach(w => grid.innerHTML += `<div class="weekday">${w}</div>`);
+    weekdays.forEach(w => grid.innerHTML += `<div class="weekday-label">${w}</div>`);
 
-    for (let i = 0; i < firstDay; i++) {
-      grid.innerHTML += `<div></div>`;
+    // Empty lead-in spaces
+    for (let i = 0; i < firstDayIndex; i++) {
+      grid.innerHTML += `<div class="empty-cell"></div>`;
     }
 
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-      const isPresent = config.currentUser.presents.includes(dateStr);
-      const isMyPointer = config.currentUser.lastPointerDate === dateStr;
+    // Render Days
+    for (let day = 1; day <= totalDaysInMonth; day++) {
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const isPresent = state.user.presents.includes(dateStr);
+      const isMyActivePointer = state.user.lastPointerDate === dateStr;
 
-      // Find other users with pointers on this date
-      const otherUsersWithPointer = registeredUsers.filter(u => u.name !== config.currentUser.name && u.lastPointerDate === dateStr);
+      // Find other registered users whose location pointer is currently on this date
+      const otherUsersOnThisDate = state.allUsers.filter(u => u.name !== state.user.name && u.lastPointerDate === dateStr);
 
       let cellHTML = `
-        <div class="day-cell ${isPresent ? 'present' : ''}" onclick="toggleAttendance('${dateStr}')">
-          <div class="day-num">${day}</div>
-          
-          ${isMyPointer ? `
-            <div class="pulse-wrapper">
-              <div class="pulse-wave" style="color: var(--accent)"></div>
-              <div class="pointer-3d ${config.currentUser.color}"></div>
+        <div class="day-cell ${isPresent ? 'is-present' : ''}" onclick="toggleAttendance('${dateStr}')">
+          <div class="day-number">${day}</div>
+
+          ${isMyActivePointer ? `
+            <div class="pointer-stage">
+              <div class="pulse-wave-ring"></div>
+              <div class="pointer-3d ${state.user.color}"></div>
             </div>
           ` : ''}
 
-          <div class="users-stack">
-            ${otherUsersWithPointer.map(u => `
-              <div class="user-pin-indicator ${u.color}" title="${u.name} (${u.presents.length} presents)"></div>
+          <div class="others-pointer-container">
+            ${otherUsersOnThisDate.map(u => `
+              <div class="user-presence-dot ${u.color}" data-tooltip="${u.name} (${u.presents ? u.presents.length : 0} days present)"></div>
             `).join('')}
           </div>
         </div>
       `;
+
       grid.innerHTML += cellHTML;
     }
   }
 
-  // Init checks
-  if (!config.currentUser) {
+  // Initial Execution Check
+  if (!state.user) {
     document.getElementById('onboardModal').style.display = 'flex';
   } else {
     document.getElementById('onboardModal').style.display = 'none';
     renderCalendar();
-    syncData();
+    fetchDataFromServer();
   }
 
-  // Poll server for real-time user updates every 5 seconds
-  setInterval(syncData, 5000);
+  // Poll Google Apps Script every 5 seconds for live multi-user updates
+  setInterval(fetchDataFromServer, 5000);
 </script>
 </body>
 </html>
