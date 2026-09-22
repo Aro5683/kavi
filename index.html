@@ -30,7 +30,7 @@
     }
 
     .container {
-      max-width: 1050px;
+      max-width: 1100px;
       margin: 0 auto;
     }
 
@@ -93,7 +93,7 @@
     button:hover { background: var(--accent-hover); }
     button:active { transform: scale(0.98); }
 
-    /* 3D Color Pointer Grid Selection */
+    /* 3D Color Pointer Selection Grid */
     .color-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -117,7 +117,7 @@
     .color-option:hover { border-color: #475569; }
     .color-option.selected { border-color: var(--accent); background: rgba(99, 102, 241, 0.1); }
 
-    /* 3D Location Pointer Icon Engine */
+    /* 3D Location Pointer Icon Styling */
     .pointer-3d {
       width: 22px;
       height: 22px;
@@ -140,7 +140,7 @@
       box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3);
     }
 
-    /* 6 Selected Color Gradients */
+    /* Pointer Color Gradients */
     .c-red { background: linear-gradient(135deg, #f87171, #dc2626); }
     .c-blue { background: linear-gradient(135deg, #60a5fa, #2563eb); }
     .c-green { background: linear-gradient(135deg, #34d399, #059669); }
@@ -148,7 +148,7 @@
     .c-purple { background: linear-gradient(135deg, #c084fc, #9333ea); }
     .c-orange { background: linear-gradient(135deg, #fb923c, #ea580c); }
 
-    /* Dashboard Header */
+    /* Header Styling */
     header {
       display: flex;
       justify-content: space-between;
@@ -184,7 +184,7 @@
     }
     .btn-config:hover { background: #334155; }
 
-    /* Main Calendar Interface */
+    /* Calendar Styling */
     .calendar-wrapper {
       background: var(--card-bg);
       border-radius: 20px;
@@ -219,7 +219,7 @@
     }
 
     .day-cell {
-      min-height: 100px;
+      min-height: 105px;
       background: #0b0f19;
       border-radius: 14px;
       border: 1px solid var(--border);
@@ -230,7 +230,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .day-cell:hover { border-color: var(--accent); transform: translateY(-2px); }
@@ -243,7 +243,7 @@
     .day-number { font-weight: 700; font-size: 0.85rem; color: var(--muted); }
     .day-cell.is-present .day-number { color: #10b981; }
 
-    /* Big Pulse Wave Animation on Active Location Pointer */
+    /* Pulse Wave Animations */
     .pointer-stage {
       position: absolute;
       inset: 0;
@@ -256,8 +256,8 @@
 
     .pulse-wave-ring {
       position: absolute;
-      width: 50px;
-      height: 50px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
       border: 2px solid var(--accent);
       animation: bigPulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
@@ -269,71 +269,55 @@
       80%, 100% { transform: scale(2.2); opacity: 0; }
     }
 
-    /* Shared Presence Stack for Other Users */
+    /* Container for Displaying Other Users' Pins */
     .others-pointer-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 4px;
+      gap: 6px;
       margin-top: 4px;
       z-index: 10;
     }
 
-    .user-presence-dot {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      border: 1px solid rgba(255, 255, 255, 0.8);
-      position: relative;
-      cursor: help;
-      transition: transform 0.2s;
-    }
-
-    .user-presence-dot:hover {
-      transform: scale(1.3);
-      z-index: 20;
-    }
-
-    /* Dynamic Tooltip */
-    .user-presence-dot[data-tooltip]:hover::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: 125%;
-      left: 50%;
-      transform: translateX(-50%);
+    .user-presence-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
       background: #0f172a;
-      color: #fff;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 0.7rem;
-      white-space: nowrap;
       border: 1px solid var(--border);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      pointer-events: none;
-      z-index: 100;
+      border-radius: 12px;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      color: #f8fafc;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
     }
 
-    .empty-cell {
-      visibility: hidden;
+    .user-presence-badge .badge-pin {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
     }
+
+    .empty-cell { visibility: hidden; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Top Header Navigation -->
+  <!-- Header -->
   <header>
     <div class="user-greeting">
       <h1 id="userHeader">Hey "User" <span id="headerPointerIcon"></span></h1>
       <p id="syncStatus">Real-time AppsScript Cloud Synchronization Active</p>
     </div>
     <div class="stats-container">
-      <div class="stat-card">👥 Active Users: <strong id="totalUsers">1</strong></div>
+      <div class="stat-card">👥 Active Users: <strong id="totalUsers">0</strong></div>
       <div class="stat-card">📅 My Presents: <strong id="myPresentCount">0</strong></div>
       <button class="btn-config" onclick="openScriptUrlModal()">⚙ Setup Script URL</button>
     </div>
   </header>
 
-  <!-- Month Calendar View -->
+  <!-- Calendar View -->
   <div class="calendar-wrapper">
     <div class="calendar-header">
       <h2 id="currentMonthYearText">Calendar</h2>
@@ -366,32 +350,36 @@
   </div>
 </div>
 
-<!-- AppsScript Web App URL Modal -->
+<!-- AppsScript URL Setup Modal -->
 <div class="modal-overlay" id="scriptUrlModal" style="display: none;">
   <div class="card">
     <h2>Connect Google AppsScript</h2>
-    <p class="subtext">Paste your deployed Google Apps Script Web App URL below for real-time multi-user synchronization.</p>
+    <p class="subtext">Paste your deployed Google Apps Script Web App URL below.</p>
 
     <label>Google Apps Script Web App URL</label>
     <input type="url" id="inputScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" />
 
-    <button onclick="saveScriptUrl()">Save & Connect</button>
+    <button onclick="saveScriptUrl()">Save & Sync</button>
     <button style="background: transparent; border: 1px solid var(--border); margin-top: 10px;" onclick="closeScriptUrlModal()">Cancel</button>
   </div>
 </div>
 
 <script>
-  // App State Management
   let state = {
-    scriptUrl: localStorage.getItem('gas_url') || '',
+    scriptUrl: localStorage.getItem('gas_url') || 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnQcS4yUNlLJ8PGQvZtcFrwE0S2zmm6b1gtYymFyyuJEDo-agAKPN-lnWEhBYQ9Ft0-H0V2VyzCGS1jCrnCUI3kCDEjDYnAhiq1yqva5xF23QOaK-9VoCKd5SLeFGeylGq68sMHg7AV67c71NP_H8ffFCntPY-3qsvNicDYDKAa3HWAnt21p1bPDzwxmSXATR9rTFxvAIxhIOIMSLIW7OR6Gqx6Xp50VVNWwDK44pl-Q3U87nUbTZi46K0SzrTZEixYZNpvbB2MejEmJKBgSKr0HpiJ-xw&lib=MDSMCZXETSEQiuX4DXJ_tcbhb8GuvlFSd',
     user: JSON.parse(localStorage.getItem('user_profile') || 'null'),
     selectedColor: 'c-red',
     allUsers: []
   };
 
-  // Set default month picker to current date
+  // Set current month on init
   const now = new Date();
   document.getElementById('monthSelector').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  function normalizeDate(dateVal) {
+    if (!dateVal) return '';
+    return dateVal.split('T')[0];
+  }
 
   function selectColor(colorClass, element) {
     document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
@@ -413,12 +401,7 @@
     localStorage.setItem('user_profile', JSON.stringify(state.user));
     document.getElementById('onboardModal').style.display = 'none';
 
-    if (!state.scriptUrl) {
-      openScriptUrlModal();
-    } else {
-      pushDataToServer();
-    }
-
+    pushDataToServer();
     renderCalendar();
   }
 
@@ -436,7 +419,7 @@
     state.scriptUrl = url;
     localStorage.setItem('gas_url', url);
     closeScriptUrlModal();
-    pushDataToServer();
+    fetchDataFromServer();
   }
 
   function toggleAttendance(dateStr) {
@@ -448,7 +431,7 @@
     if (index > -1) {
       // Toggle Absent
       presents.splice(index, 1);
-      if (state.user.lastPointerDate === dateStr) {
+      if (normalizeDate(state.user.lastPointerDate) === dateStr) {
         state.user.lastPointerDate = presents[presents.length - 1] || null;
       }
     } else {
@@ -465,12 +448,21 @@
   async function pushDataToServer() {
     if (!state.scriptUrl || !state.user) return;
     try {
+      const payload = new URLSearchParams({
+        action: 'registerOrUpdate',
+        name: state.user.name,
+        color: state.user.color,
+        presents: JSON.stringify(state.user.presents),
+        lastPointerDate: state.user.lastPointerDate || ''
+      });
+
       await fetch(state.scriptUrl, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'registerOrUpdate', ...state.user })
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: payload.toString()
       });
+
       fetchDataFromServer();
     } catch (e) {
       console.error('Server Push Error:', e);
@@ -480,7 +472,7 @@
   async function fetchDataFromServer() {
     if (!state.scriptUrl) return;
     try {
-      const res = await fetch(`${state.scriptUrl}?action=getUsers`);
+      const res = await fetch(`${state.scriptUrl}${state.scriptUrl.includes('?') ? '&' : '?'}action=getUsers`);
       const data = await res.json();
       if (Array.isArray(data)) {
         state.allUsers = data;
@@ -488,14 +480,13 @@
         renderCalendar();
       }
     } catch (e) {
-      console.error('Server Sync Fetch Error:', e);
+      console.error('Server Sync Error:', e);
     }
   }
 
   function renderCalendar() {
     if (!state.user) return;
 
-    // Update Header Text & Icon
     document.getElementById('userHeader').innerHTML = `Hey "<strong>${state.user.name}</strong>" <div class="pointer-3d ${state.user.color}" style="display:inline-block; transform: scale(0.8) rotate(-45deg);"></div>`;
     document.getElementById('myPresentCount').innerText = state.user.presents.length;
 
@@ -509,23 +500,24 @@
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = '';
 
-    // Render Weekday Labels
     const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     weekdays.forEach(w => grid.innerHTML += `<div class="weekday-label">${w}</div>`);
 
-    // Empty lead-in spaces
     for (let i = 0; i < firstDayIndex; i++) {
       grid.innerHTML += `<div class="empty-cell"></div>`;
     }
 
-    // Render Days
     for (let day = 1; day <= totalDaysInMonth; day++) {
       const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const isPresent = state.user.presents.includes(dateStr);
-      const isMyActivePointer = state.user.lastPointerDate === dateStr;
+      
+      const myNormalizedPointer = normalizeDate(state.user.lastPointerDate);
+      const isMyActivePointer = myNormalizedPointer === dateStr;
 
-      // Find other registered users whose location pointer is currently on this date
-      const otherUsersOnThisDate = state.allUsers.filter(u => u.name !== state.user.name && u.lastPointerDate === dateStr);
+      // Find other users who have their location pointer on this date
+      const otherUsersWithPointerOnDate = state.allUsers.filter(u => {
+        return u.name.toLowerCase() !== state.user.name.toLowerCase() && normalizeDate(u.lastPointerDate) === dateStr;
+      });
 
       let cellHTML = `
         <div class="day-cell ${isPresent ? 'is-present' : ''}" onclick="toggleAttendance('${dateStr}')">
@@ -539,8 +531,11 @@
           ` : ''}
 
           <div class="others-pointer-container">
-            ${otherUsersOnThisDate.map(u => `
-              <div class="user-presence-dot ${u.color}" data-tooltip="${u.name} (${u.presents ? u.presents.length : 0} days present)"></div>
+            ${otherUsersWithPointerOnDate.map(u => `
+              <div class="user-presence-badge">
+                <span class="badge-pin ${u.color}"></span>
+                <span>${u.name} (${u.presents ? u.presents.length : 0} days)</span>
+              </div>
             `).join('')}
           </div>
         </div>
@@ -550,7 +545,7 @@
     }
   }
 
-  // Initial Execution Check
+  // App Initialization
   if (!state.user) {
     document.getElementById('onboardModal').style.display = 'flex';
   } else {
@@ -559,7 +554,7 @@
     fetchDataFromServer();
   }
 
-  // Poll Google Apps Script every 5 seconds for live multi-user updates
+  // Auto-sync from server every 5 seconds
   setInterval(fetchDataFromServer, 5000);
 </script>
 </body>
