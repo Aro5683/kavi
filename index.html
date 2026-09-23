@@ -1,561 +1,707 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Real-Time 3D Attendance Tracker</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ludo Attendance Tracker</title>
   <style>
     :root {
-      --bg: #0b0f19;
-      --card-bg: #151c2c;
-      --accent: #6366f1;
-      --accent-hover: #4f46e5;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --border: #232d42;
+      --ludo-red: #ff3b30;
+      --ludo-green: #34c759;
+      --ludo-yellow: #ffcc00;
+      --ludo-blue: #007aff;
+      --bg-dark: #0f172a;
+      --panel-bg: rgba(30, 41, 59, 0.85);
+      --text-main: #f8fafc;
     }
-    
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     body {
-      background: var(--bg);
-      color: var(--text);
+      background: #090d16;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(255, 59, 48, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(52, 199, 89, 0.15) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(0, 122, 255, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(255, 204, 0, 0.15) 0px, transparent 50%);
+      color: var(--text-main);
       min-height: 100vh;
-      padding: 20px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    /* Modals & Overlays */
+    /* Registration Modal */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0,0,0,0.85);
       backdrop-filter: blur(8px);
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       z-index: 1000;
-      padding: 20px;
     }
 
-    .card {
-      background: var(--card-bg);
-      padding: 32px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      width: 100%;
-      max-width: 480px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    .modal-box {
+      background: #1e293b;
+      border: 3px solid var(--ludo-yellow);
+      border-radius: 16px;
+      padding: 25px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 0 25px rgba(255, 204, 0, 0.3);
+      text-align: center;
     }
 
-    h2 { font-size: 1.5rem; margin-bottom: 8px; font-weight: 700; }
-    p.subtext { color: var(--muted); font-size: 0.875rem; margin-bottom: 20px; line-height: 1.4; }
+    .modal-box h2 {
+      margin-bottom: 15px;
+      color: var(--ludo-yellow);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
 
-    label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--muted); }
-
-    input[type="text"], input[type="url"], select {
-      width: 100%;
-      padding: 12px 16px;
+    .input-group {
       margin-bottom: 20px;
-      background: #0b0f19;
-      border: 1px solid var(--border);
-      color: #fff;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color 0.2s;
+      text-align: left;
     }
 
-    input:focus { border-color: var(--accent); }
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: #94a3b8;
+    }
 
-    button {
+    .input-group input {
       width: 100%;
-      padding: 14px;
-      background: var(--accent);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: white;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .color-options {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .color-btn {
+      flex: 1;
+      height: 45px;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .color-btn:hover { transform: scale(1.05); }
+    .color-btn.selected { border-color: white; transform: scale(1.1); }
+    .color-red { background: var(--ludo-red); }
+    .color-green { background: var(--ludo-green); }
+    .color-yellow { background: var(--ludo-yellow); }
+    .color-blue { background: var(--ludo-blue); }
+
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background: var(--ludo-green);
       color: white;
       border: none;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 0.95rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
       cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
+      margin-top: 10px;
     }
 
-    button:hover { background: var(--accent-hover); }
-    button:active { transform: scale(0.98); }
-
-    /* 3D Color Pointer Selection Grid */
-    .color-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .color-option {
-      position: relative;
-      height: 75px;
-      background: #0b0f19;
-      border-radius: 12px;
-      border: 2px solid var(--border);
-      cursor: pointer;
+    /* Main Container */
+    .app-container {
+      width: 100%;
+      max-width: 700px;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: 0.2s ease;
+      flex-direction: column;
+      gap: 20px;
     }
 
-    .color-option:hover { border-color: #475569; }
-    .color-option.selected { border-color: var(--accent); background: rgba(99, 102, 241, 0.1); }
-
-    /* 3D Location Pointer Icon Styling */
-    .pointer-3d {
-      width: 22px;
-      height: 22px;
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      box-shadow: -3px 5px 10px rgba(0,0,0,0.5), inset -2px -2px 4px rgba(0,0,0,0.4), inset 2px 2px 4px rgba(255,255,255,0.5);
-      position: relative;
-      z-index: 2;
-    }
-
-    .pointer-3d::after {
-      content: '';
-      width: 8px;
-      height: 8px;
-      background: #fff;
-      position: absolute;
-      border-radius: 50%;
-      top: 7px;
-      left: 7px;
-      box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3);
-    }
-
-    /* Pointer Color Gradients */
-    .c-red { background: linear-gradient(135deg, #f87171, #dc2626); }
-    .c-blue { background: linear-gradient(135deg, #60a5fa, #2563eb); }
-    .c-green { background: linear-gradient(135deg, #34d399, #059669); }
-    .c-yellow { background: linear-gradient(135deg, #fbbf24, #d97706); }
-    .c-purple { background: linear-gradient(135deg, #c084fc, #9333ea); }
-    .c-orange { background: linear-gradient(135deg, #fb923c, #ea580c); }
-
-    /* Header Styling */
+    /* Header */
     header {
+      background: var(--panel-bg);
+      border: 2px solid #334155;
+      border-radius: 12px;
+      padding: 15px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-      gap: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
 
-    .user-greeting h1 { font-size: 1.75rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-    .user-greeting p { color: var(--muted); font-size: 0.875rem; margin-top: 4px; }
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-    .stats-container { display: flex; gap: 12px; flex-wrap: wrap; }
-    .stat-card {
-      background: var(--card-bg);
-      padding: 10px 18px;
+    .user-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid white;
+    }
+
+    /* Leaderboard */
+    .leaderboard-panel {
+      background: var(--panel-bg);
+      border: 2px solid #334155;
       border-radius: 12px;
-      border: 1px solid var(--border);
-      font-size: 0.875rem;
+      padding: 15px;
+    }
+
+    .leaderboard-panel h3 {
+      font-size: 1.1rem;
+      color: var(--ludo-yellow);
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .stat-card strong { color: #fff; }
-
-    .btn-config {
-      width: auto;
-      background: #1e293b;
-      border: 1px solid var(--border);
-      font-size: 0.8rem;
-      padding: 8px 14px;
-    }
-    .btn-config:hover { background: #334155; }
-
-    /* Calendar Styling */
-    .calendar-wrapper {
-      background: var(--card-bg);
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      padding: 28px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    .leaderboard-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 150px;
+      overflow-y: auto;
     }
 
-    .calendar-header {
+    .leader-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-      gap: 12px;
+      background: #0f172a;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border-left: 4px solid transparent;
     }
 
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
+    .leader-info {
+      display: flex;
+      align-items: center;
       gap: 10px;
     }
 
-    .weekday-label {
-      text-align: center;
-      font-weight: 600;
-      color: var(--muted);
-      padding-bottom: 12px;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+    /* Calendar Controls */
+    .calendar-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--panel-bg);
+      padding: 10px 15px;
+      border-radius: 12px;
+      border: 1px solid #334155;
     }
 
-    .day-cell {
-      min-height: 105px;
-      background: #0b0f19;
-      border-radius: 14px;
-      border: 1px solid var(--border);
+    .calendar-controls select {
+      background: #0f172a;
+      color: white;
+      border: 1px solid #334155;
       padding: 8px;
-      cursor: pointer;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    /* Board & Calendar Grid */
+    .ludo-board {
+      background: #1e293b;
+      border: 4px solid #334155;
+      border-radius: 16px;
+      padding: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
       position: relative;
-      transition: all 0.2s ease;
+    }
+
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-weight: bold;
+      color: #64748b;
+      margin-bottom: 10px;
+    }
+
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .day-card {
+      aspect-ratio: 1;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      overflow: visible;
-    }
-
-    .day-cell:hover { border-color: var(--accent); transform: translateY(-2px); }
-    
-    .day-cell.is-present {
-      border-color: #10b981;
-      background: rgba(16, 185, 129, 0.05);
-    }
-
-    .day-number { font-weight: 700; font-size: 0.85rem; color: var(--muted); }
-    .day-cell.is-present .day-number { color: #10b981; }
-
-    /* Pulse Wave Animations */
-    .pointer-stage {
-      position: absolute;
-      inset: 0;
-      display: flex;
       align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      z-index: 5;
+      justify-content: space-between;
+      padding: 4px;
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s, transform 0.1s;
     }
 
-    .pulse-wave-ring {
-      position: absolute;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 2px solid var(--accent);
-      animation: bigPulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
-      opacity: 0;
+    .day-card:hover {
+      background: #1e293b;
+      transform: translateY(-2px);
     }
 
-    @keyframes bigPulse {
-      0% { transform: scale(0.2); opacity: 1; }
-      80%, 100% { transform: scale(2.2); opacity: 0; }
+    .day-card.empty {
+      background: transparent;
+      border: none;
+      cursor: default;
     }
 
-    /* Container for Displaying Other Users' Pins */
-    .others-pointer-container {
+    .day-number {
+      font-size: 0.85rem;
+      font-weight: bold;
+      align-self: flex-start;
+      color: #94a3b8;
+    }
+
+    .day-card.today {
+      border-color: var(--ludo-yellow);
+    }
+
+    .day-card.present {
+      background: rgba(52, 199, 89, 0.1);
+      border-color: var(--ludo-green);
+    }
+
+    /* Pointers & Animations */
+    .pointers-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 4px;
+      justify-content: center;
+      align-items: center;
+      gap: 2px;
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    /* 3D Pin Pointer Styles */
+    .pin {
+      width: 14px;
+      height: 14px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      position: relative;
+      box-shadow: 0px 2px 4px rgba(0,0,0,0.5);
+      transition: all 0.3s ease;
+      z-index: 2;
+    }
+
+    .pin::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      margin: 4px 0 0 4px;
+      background: #fff;
+      position: absolute;
+      border-radius: 50%;
+    }
+
+    /* Active Big 3D Pin with Pulse Wave */
+    .pin.active-big {
+      width: 22px;
+      height: 22px;
       z-index: 10;
     }
 
-    .user-presence-badge {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      background: #0f172a;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 2px 6px;
-      font-size: 0.7rem;
-      color: #f8fafc;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+    .pin.active-big::after {
+      width: 8px;
+      height: 8px;
+      margin: 7px 0 0 7px;
     }
 
-    .user-presence-badge .badge-pin {
-      width: 10px;
-      height: 10px;
+    /* Radar Pulse Wave */
+    .pulse-wave {
+      position: absolute;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
-      display: inline-block;
+      background: transparent;
+      border: 2px solid;
+      opacity: 0;
+      animation: pulse 1.8s infinite ease-out;
+      pointer-events: none;
     }
 
-    .empty-cell { visibility: hidden; }
+    @keyframes pulse {
+      0% {
+        transform: scale(0.3);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(2.2);
+        opacity: 0;
+      }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 480px) {
+      .day-number { font-size: 0.75rem; }
+      .pin { width: 10px; height: 10px; }
+      .pin::after { width: 4px; height: 4px; margin: 3px 0 0 3px; }
+      .pin.active-big { width: 16px; height: 16px; }
+      .pin.active-big::after { width: 6px; height: 6px; margin: 5px 0 0 5px; }
+    }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <!-- Header -->
-  <header>
-    <div class="user-greeting">
-      <h1 id="userHeader">Hey "User" <span id="headerPointerIcon"></span></h1>
-      <p id="syncStatus">Real-time AppsScript Cloud Synchronization Active</p>
+  <!-- Registration Modal -->
+  <div id="registrationModal" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+      <h2>🎲 Player Join</h2>
+      <div class="input-group">
+        <label for="username">Enter Your Name:</label>
+        <input type="text" id="username" placeholder="e.g. Rahul" maxlength="20">
+      </div>
+      <div class="input-group">
+        <label>Choose Token Color:</label>
+        <div class="color-options">
+          <button class="color-btn color-red selected" data-color="#ff3b30"></button>
+          <button class="color-btn color-green" data-color="#34c759"></button>
+          <button class="color-btn color-yellow" data-color="#ffcc00"></button>
+          <button class="color-btn color-blue" data-color="#007aff"></button>
+        </div>
+      </div>
+      <button class="btn-submit" onclick="registerUser()">Start Playing</button>
     </div>
-    <div class="stats-container">
-      <div class="stat-card">👥 Active Users: <strong id="totalUsers">0</strong></div>
-      <div class="stat-card">📅 My Presents: <strong id="myPresentCount">0</strong></div>
-      <button class="btn-config" onclick="openScriptUrlModal()">⚙ Setup Script URL</button>
-    </div>
-  </header>
-
-  <!-- Calendar View -->
-  <div class="calendar-wrapper">
-    <div class="calendar-header">
-      <h2 id="currentMonthYearText">Calendar</h2>
-      <input type="month" id="monthSelector" style="width: auto; margin-bottom: 0;" onchange="renderCalendar()">
-    </div>
-    <div class="calendar-grid" id="calendarGrid"></div>
   </div>
-</div>
 
-<!-- Onboarding Modal -->
-<div class="modal-overlay" id="onboardModal">
-  <div class="card">
-    <h2>Welcome!</h2>
-    <p class="subtext">Enter your name and pick a 3D location pointer color to register into the attendance system.</p>
+  <!-- Main App Container -->
+  <div class="app-container">
+    <header>
+      <div class="user-badge">
+        <div id="userAvatar" class="user-avatar" style="background: var(--ludo-red);"></div>
+        <div>
+          <div style="font-size: 0.8rem; color: #94a3b8;">WELCOME PLAYER</div>
+          <div id="userGreeting" style="font-weight: bold; font-size: 1.1rem;">Hey, Player</div>
+        </div>
+      </div>
+      <div id="syncStatus" style="font-size: 0.8rem; color: var(--ludo-green);">● Live Sync</div>
+    </header>
 
-    <label>Your Name</label>
-    <input type="text" id="inputName" placeholder="Enter full name" />
-
-    <label>Choose 3D Pointer Icon Color</label>
-    <div class="color-grid" id="colorGrid">
-      <div class="color-option selected" onclick="selectColor('c-red', this)"><div class="pointer-3d c-red"></div></div>
-      <div class="color-option" onclick="selectColor('c-blue', this)"><div class="pointer-3d c-blue"></div></div>
-      <div class="color-option" onclick="selectColor('c-green', this)"><div class="pointer-3d c-green"></div></div>
-      <div class="color-option" onclick="selectColor('c-yellow', this)"><div class="pointer-3d c-yellow"></div></div>
-      <div class="color-option" onclick="selectColor('c-purple', this)"><div class="pointer-3d c-purple"></div></div>
-      <div class="color-option" onclick="selectColor('c-orange', this)"><div class="pointer-3d c-orange"></div></div>
+    <!-- Leaderboard Panel -->
+    <div class="leaderboard-panel">
+      <h3>🏆 Attendance Leaderboard</h3>
+      <div id="leaderboardList" class="leaderboard-list">
+        <div style="color: #64748b; font-size: 0.9rem;">Loading live scores...</div>
+      </div>
     </div>
 
-    <button onclick="saveRegistration()">Continue to Calendar</button>
+    <!-- Calendar Controls -->
+    <div class="calendar-controls">
+      <select id="monthSelect" onchange="renderCalendar()"></select>
+      <select id="yearSelect" onchange="renderCalendar()"></select>
+    </div>
+
+    <!-- Ludo Board Calendar -->
+    <div class="ludo-board">
+      <div class="weekdays">
+        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+      </div>
+      <div id="daysGrid" class="days-grid"></div>
+    </div>
   </div>
-</div>
 
-<!-- AppsScript URL Setup Modal -->
-<div class="modal-overlay" id="scriptUrlModal" style="display: none;">
-  <div class="card">
-    <h2>Connect Google AppsScript</h2>
-    <p class="subtext">Paste your deployed Google Apps Script Web App URL below.</p>
+  <script>
+    // Your Apps Script URL
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKsxDxv-PFZTZRpRokl5Snsz4XFg2CMEruVJr2KBhx26JSQW19ym1J8d60IpEtbRSX/exec";
 
-    <label>Google Apps Script Web App URL</label>
-    <input type="url" id="inputScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" />
+    let currentUser = null;
+    let selectedColor = "#ff3b30";
+    let activeLatestDateStr = null; 
+    let globalAttendanceData = []; 
+    let globalUsers = []; 
 
-    <button onclick="saveScriptUrl()">Save & Sync</button>
-    <button style="background: transparent; border: 1px solid var(--border); margin-top: 10px;" onclick="closeScriptUrlModal()">Cancel</button>
-  </div>
-</div>
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-<script>
-  let state = {
-    scriptUrl: localStorage.getItem('gas_url') || 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnQcS4yUNlLJ8PGQvZtcFrwE0S2zmm6b1gtYymFyyuJEDo-agAKPN-lnWEhBYQ9Ft0-H0V2VyzCGS1jCrnCUI3kCDEjDYnAhiq1yqva5xF23QOaK-9VoCKd5SLeFGeylGq68sMHg7AV67c71NP_H8ffFCntPY-3qsvNicDYDKAa3HWAnt21p1bPDzwxmSXATR9rTFxvAIxhIOIMSLIW7OR6Gqx6Xp50VVNWwDK44pl-Q3U87nUbTZi46K0SzrTZEixYZNpvbB2MejEmJKBgSKr0HpiJ-xw&lib=MDSMCZXETSEQiuX4DXJ_tcbhb8GuvlFSd',
-    user: JSON.parse(localStorage.getItem('user_profile') || 'null'),
-    selectedColor: 'c-red',
-    allUsers: []
-  };
-
-  // Set current month on init
-  const now = new Date();
-  document.getElementById('monthSelector').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
-  function normalizeDate(dateVal) {
-    if (!dateVal) return '';
-    return dateVal.split('T')[0];
-  }
-
-  function selectColor(colorClass, element) {
-    document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
-    element.classList.add('selected');
-    state.selectedColor = colorClass;
-  }
-
-  function saveRegistration() {
-    const name = document.getElementById('inputName').value.trim();
-    if (!name) return alert('Please enter your name.');
-
-    state.user = {
-      name: name,
-      color: state.selectedColor,
-      presents: [],
-      lastPointerDate: null
+    window.onload = function() {
+      initControls();
+      checkRegistration();
+      fetchLiveData();
+      // Auto refresh data every 8 seconds for live user syncing
+      setInterval(fetchLiveData, 8000);
     };
 
-    localStorage.setItem('user_profile', JSON.stringify(state.user));
-    document.getElementById('onboardModal').style.display = 'none';
+    function initControls() {
+      const monthSel = document.getElementById("monthSelect");
+      const yearSel = document.getElementById("yearSelect");
+      const now = new Date();
 
-    pushDataToServer();
-    renderCalendar();
-  }
+      months.forEach((m, idx) => {
+        const opt = document.createElement("option");
+        opt.value = idx;
+        opt.textContent = m;
+        if(idx === now.getMonth()) opt.selected = true;
+        monthSel.appendChild(opt);
+      });
 
-  function openScriptUrlModal() {
-    document.getElementById('inputScriptUrl').value = state.scriptUrl;
-    document.getElementById('scriptUrlModal').style.display = 'flex';
-  }
-
-  function closeScriptUrlModal() {
-    document.getElementById('scriptUrlModal').style.display = 'none';
-  }
-
-  function saveScriptUrl() {
-    const url = document.getElementById('inputScriptUrl').value.trim();
-    state.scriptUrl = url;
-    localStorage.setItem('gas_url', url);
-    closeScriptUrlModal();
-    fetchDataFromServer();
-  }
-
-  function toggleAttendance(dateStr) {
-    if (!state.user) return;
-
-    const presents = state.user.presents;
-    const index = presents.indexOf(dateStr);
-
-    if (index > -1) {
-      // Toggle Absent
-      presents.splice(index, 1);
-      if (normalizeDate(state.user.lastPointerDate) === dateStr) {
-        state.user.lastPointerDate = presents[presents.length - 1] || null;
+      const currentYear = now.getFullYear();
+      for(let y = currentYear - 1; y <= currentYear + 2; y++) {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        if(y === currentYear) opt.selected = true;
+        yearSel.appendChild(opt);
       }
-    } else {
-      // Toggle Present and set location pointer
-      presents.push(dateStr);
-      state.user.lastPointerDate = dateStr;
+
+      document.querySelectorAll(".color-btn").forEach(btn => {
+        btn.addEventListener("click", function() {
+          document.querySelectorAll(".color-btn").forEach(b => b.classList.remove("selected"));
+          this.classList.add("selected");
+          selectedColor = this.getAttribute("data-color");
+        });
+      });
     }
 
-    localStorage.setItem('user_profile', JSON.stringify(state.user));
-    renderCalendar();
-    pushDataToServer();
-  }
-
-  async function pushDataToServer() {
-    if (!state.scriptUrl || !state.user) return;
-    try {
-      const payload = new URLSearchParams({
-        action: 'registerOrUpdate',
-        name: state.user.name,
-        color: state.user.color,
-        presents: JSON.stringify(state.user.presents),
-        lastPointerDate: state.user.lastPointerDate || ''
-      });
-
-      await fetch(state.scriptUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: payload.toString()
-      });
-
-      fetchDataFromServer();
-    } catch (e) {
-      console.error('Server Push Error:', e);
+    function checkRegistration() {
+      const stored = localStorage.getItem("ludo_tracker_user");
+      if(stored) {
+        currentUser = JSON.parse(stored);
+        updateUserUI();
+      } else {
+        document.getElementById("registrationModal").style.display = "flex";
+      }
     }
-  }
 
-  async function fetchDataFromServer() {
-    if (!state.scriptUrl) return;
-    try {
-      const res = await fetch(`${state.scriptUrl}${state.scriptUrl.includes('?') ? '&' : '?'}action=getUsers`);
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        state.allUsers = data;
-        document.getElementById('totalUsers').innerText = state.allUsers.length;
+    function registerUser() {
+      const nameInput = document.getElementById("username").value.trim();
+      if(!nameInput) {
+        alert("Please enter your name!");
+        return;
+      }
+
+      currentUser = {
+        userId: "usr_" + Math.random().toString(36).substr(2, 9),
+        userName: nameInput,
+        color: selectedColor
+      };
+
+      localStorage.setItem("ludo_tracker_user", JSON.stringify(currentUser));
+      document.getElementById("registrationModal").style.display = "none";
+      updateUserUI();
+      fetchLiveData();
+    }
+
+    function updateUserUI() {
+      if(!currentUser) return;
+      document.getElementById("userGreeting").textContent = `Hey, ${currentUser.userName}`;
+      document.getElementById("userAvatar").style.background = currentUser.color;
+    }
+
+    async function fetchLiveData() {
+      try {
+        document.getElementById("syncStatus").textContent = "● Syncing...";
+        const res = await fetch(APPS_SCRIPT_URL);
+        const data = await res.json();
+        
+        globalUsers = data.users || [];
+        globalAttendanceData = data.attendance || [];
+
+        document.getElementById("syncStatus").textContent = "● Live Sync";
         renderCalendar();
+        updateLeaderboard();
+      } catch(err) {
+        console.error("Sync Error:", err);
+        document.getElementById("syncStatus").textContent = "● Offline Mode";
+        renderCalendar();
+        updateLeaderboard();
       }
-    } catch (e) {
-      console.error('Server Sync Error:', e);
-    }
-  }
-
-  function renderCalendar() {
-    if (!state.user) return;
-
-    document.getElementById('userHeader').innerHTML = `Hey "<strong>${state.user.name}</strong>" <div class="pointer-3d ${state.user.color}" style="display:inline-block; transform: scale(0.8) rotate(-45deg);"></div>`;
-    document.getElementById('myPresentCount').innerText = state.user.presents.length;
-
-    const [year, month] = document.getElementById('monthSelector').value.split('-').map(Number);
-    const firstDayIndex = new Date(year, month - 1, 1).getDay();
-    const totalDaysInMonth = new Date(year, month, 0).getDate();
-
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    document.getElementById('currentMonthYearText').innerText = `${monthNames[month - 1]} ${year}`;
-
-    const grid = document.getElementById('calendarGrid');
-    grid.innerHTML = '';
-
-    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    weekdays.forEach(w => grid.innerHTML += `<div class="weekday-label">${w}</div>`);
-
-    for (let i = 0; i < firstDayIndex; i++) {
-      grid.innerHTML += `<div class="empty-cell"></div>`;
     }
 
-    for (let day = 1; day <= totalDaysInMonth; day++) {
-      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const isPresent = state.user.presents.includes(dateStr);
+    function renderCalendar() {
+      const grid = document.getElementById("daysGrid");
+      grid.innerHTML = "";
+
+      const selMonth = parseInt(document.getElementById("monthSelect").value);
+      const selYear = parseInt(document.getElementById("yearSelect").value);
+
+      const firstDay = new Date(selYear, selMonth, 1).getDay();
+      const totalDays = new Date(selYear, selMonth + 1, 0).getDate();
+
+      const today = new Date();
+      const todayStr = formatDate(today.getFullYear(), today.getMonth(), today.getDate());
+
+      // Empty lead slots
+      for(let i = 0; i < firstDay; i++) {
+        const emptyDiv = document.createElement("div");
+        emptyDiv.className = "day-card empty";
+        grid.appendChild(emptyDiv);
+      }
+
+      for(let day = 1; day <= totalDays; day++) {
+        const dateStr = formatDate(selYear, selMonth, day);
+        const dayCard = document.createElement("div");
+        dayCard.className = "day-card";
+
+        if(dateStr === todayStr) {
+          dayCard.classList.add("today");
+        }
+
+        const dayNum = document.createElement("span");
+        dayNum.className = "day-number";
+        dayNum.textContent = day;
+        dayCard.appendChild(dayNum);
+
+        // Filter attendance records for this specific date
+        const dayRecords = globalAttendanceData.filter(r => r.dateStr === dateStr);
+        const isCurrentPresent = currentUser && dayRecords.some(r => r.userId === currentUser.userId);
+
+        if(isCurrentPresent) {
+          dayCard.classList.add("present");
+        }
+
+        // Container for location pointers
+        const ptrContainer = document.createElement("div");
+        ptrContainer.className = "pointers-container";
+
+        dayRecords.forEach(rec => {
+          const isMe = currentUser && rec.userId === currentUser.userId;
+          const isLatestActive = isMe && (activeLatestDateStr ? activeLatestDateStr === dateStr : dateStr === todayStr);
+
+          const pin = document.createElement("div");
+          pin.className = "pin";
+          pin.style.background = rec.color;
+          pin.title = rec.userName;
+
+          if(isLatestActive) {
+            pin.classList.add("active-big");
+            const pulse = document.createElement("div");
+            pulse.className = "pulse-wave";
+            pulse.style.borderColor = rec.color;
+            ptrContainer.appendChild(pulse);
+          }
+
+          ptrContainer.appendChild(pin);
+        });
+
+        dayCard.appendChild(ptrContainer);
+
+        // Click Handler: Toggle attendance
+        dayCard.onclick = () => toggleAttendance(dateStr, isCurrentPresent);
+
+        grid.appendChild(dayCard);
+      }
+    }
+
+    async function toggleAttendance(dateStr, isCurrentlyPresent) {
+      if(!currentUser) {
+        checkRegistration();
+        return;
+      }
+
+      const newStatus = isCurrentlyPresent ? "DEFAULT" : "PRESENT";
       
-      const myNormalizedPointer = normalizeDate(state.user.lastPointerDate);
-      const isMyActivePointer = myNormalizedPointer === dateStr;
+      // Update local state instantly (Optimistic UI)
+      if(newStatus === "PRESENT") {
+        globalAttendanceData.push({
+          userId: currentUser.userId,
+          userName: currentUser.userName,
+          color: currentUser.color,
+          dateStr: dateStr
+        });
+        activeLatestDateStr = dateStr;
+      } else {
+        globalAttendanceData = globalAttendanceData.filter(
+          r => !(r.userId === currentUser.userId && r.dateStr === dateStr)
+        );
+        if(activeLatestDateStr === dateStr) activeLatestDateStr = null;
+      }
 
-      // Find other users who have their location pointer on this date
-      const otherUsersWithPointerOnDate = state.allUsers.filter(u => {
-        return u.name.toLowerCase() !== state.user.name.toLowerCase() && normalizeDate(u.lastPointerDate) === dateStr;
+      renderCalendar();
+      updateLeaderboard();
+
+      // Send update to Google Sheet via text/plain to bypass CORS
+      try {
+        await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            userId: currentUser.userId,
+            userName: currentUser.userName,
+            color: currentUser.color,
+            dateStr: dateStr,
+            status: newStatus
+          })
+        });
+        fetchLiveData();
+      } catch(e) {
+        console.error("Error pushing status:", e);
+      }
+    }
+
+    function updateLeaderboard() {
+      const container = document.getElementById("leaderboardList");
+      container.innerHTML = "";
+
+      const userCounts = {};
+
+      globalAttendanceData.forEach(rec => {
+        if(!userCounts[rec.userId]) {
+          userCounts[rec.userId] = {
+            userName: rec.userName,
+            color: rec.color,
+            count: 0
+          };
+        }
+        userCounts[rec.userId].count += 1;
       });
 
-      let cellHTML = `
-        <div class="day-cell ${isPresent ? 'is-present' : ''}" onclick="toggleAttendance('${dateStr}')">
-          <div class="day-number">${day}</div>
+      const sortedUsers = Object.values(userCounts).sort((a,b) => b.count - a.count);
 
-          ${isMyActivePointer ? `
-            <div class="pointer-stage">
-              <div class="pulse-wave-ring"></div>
-              <div class="pointer-3d ${state.user.color}"></div>
-            </div>
-          ` : ''}
+      if(sortedUsers.length === 0) {
+        container.innerHTML = `<div style="color: #64748b; font-size: 0.9rem;">No attendance recorded yet. Click a date to mark present!</div>`;
+        return;
+      }
 
-          <div class="others-pointer-container">
-            ${otherUsersWithPointerOnDate.map(u => `
-              <div class="user-presence-badge">
-                <span class="badge-pin ${u.color}"></span>
-                <span>${u.name} (${u.presents ? u.presents.length : 0} days)</span>
-              </div>
-            `).join('')}
+      sortedUsers.forEach((u, index) => {
+        const item = document.createElement("div");
+        item.className = "leader-item";
+        item.style.borderLeftColor = u.color;
+
+        item.innerHTML = `
+          <div class="leader-info">
+            <span style="font-weight: bold; width: 20px;">#${index + 1}</span>
+            <div style="width: 12px; height: 12px; border-radius: 50%; background: ${u.color}"></div>
+            <span>${u.userName}</span>
           </div>
-        </div>
-      `;
-
-      grid.innerHTML += cellHTML;
+          <div style="font-weight: bold; color: var(--ludo-yellow);">${u.count} Days</div>
+        `;
+        container.appendChild(item);
+      });
     }
-  }
 
-  // App Initialization
-  if (!state.user) {
-    document.getElementById('onboardModal').style.display = 'flex';
-  } else {
-    document.getElementById('onboardModal').style.display = 'none';
-    renderCalendar();
-    fetchDataFromServer();
-  }
-
-  // Auto-sync from server every 5 seconds
-  setInterval(fetchDataFromServer, 5000);
-</script>
+    function formatDate(year, monthIndex, day) {
+      const m = String(monthIndex + 1).padStart(2, '0');
+      const d = String(day).padStart(2, '0');
+      return `${year}-${m}-${d}`;
+    }
+  </script>
 </body>
 </html>
